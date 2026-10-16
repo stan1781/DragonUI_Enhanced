@@ -23,6 +23,7 @@ addon.defaults = {
                 size = 18,
                 spacing = 1,
                 maxBuffs = 8,
+                rows = 2,
                 showTimers = true,
             },
             chatFilter = {

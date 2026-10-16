@@ -281,10 +281,11 @@ local function PlaceHost(host, parent, anchor)
     end
 end
 
-local function LayoutRow(host, entries, startIconIndex, size, spacing, growLeft, y, showTimers)
+-- Layout entries[fromIndex..toIndex] as one horizontal row. Returns used count and row width.
+local function LayoutRow(host, entries, fromIndex, toIndex, startIconIndex, size, spacing, growLeft, y, showTimers)
     local x = 0
     local used = 0
-    for n = 1, #entries do
+    for n = fromIndex, toIndex do
         used = used + 1
         local btn = AcquireIcon(host, startIconIndex + used - 1)
         PaintIcon(btn, size, entries[n], showTimers)
@@ -361,6 +362,9 @@ RefreshHost = function(index)
     local maxBuffs = cfg.maxBuffs or 8
     if maxBuffs < 1 then maxBuffs = 1 end
     if maxBuffs > POOL_SIZE then maxBuffs = POOL_SIZE end
+    local rows = tonumber(cfg.rows) or 2
+    if rows < 1 then rows = 1 end
+    if rows > 2 then rows = 2 end
     local anchor = cfg.anchor or "LEFT"
     local growLeft = (anchor == "LEFT")
     local showTimers = cfg.showTimers ~= false
@@ -373,13 +377,32 @@ RefreshHost = function(index)
     local iconIndex = 1
     local buffW = 0
     local rowH = size
+    local rowGap = 2
     local timerPad = showTimers and TIMER_BELOW_PAD or 0
+    local rowStride = rowH + timerPad + rowGap
     local needsTimer = false
+    local usedRows = 0
 
     if #buffs > 0 then
-        local used, width = LayoutRow(host, buffs, iconIndex, size, spacing, growLeft, 0, showTimers)
-        iconIndex = iconIndex + used
-        buffW = width
+        local perRow = #buffs
+        if rows > 1 then
+            perRow = ceil(#buffs / rows)
+        end
+        local from = 1
+        while from <= #buffs do
+            local to = from + perRow - 1
+            if to > #buffs then
+                to = #buffs
+            end
+            usedRows = usedRows + 1
+            local y = -(usedRows - 1) * rowStride
+            local used, width = LayoutRow(host, buffs, from, to, iconIndex, size, spacing, growLeft, y, showTimers)
+            iconIndex = iconIndex + used
+            if width > buffW then
+                buffW = width
+            end
+            from = to + 1
+        end
         if showTimers then
             for n = 1, #buffs do
                 if buffs[n].duration and buffs[n].duration > 0 then
@@ -394,8 +417,8 @@ RefreshHost = function(index)
 
     local width = buffW
     local height = 0
-    if #buffs > 0 then
-        height = rowH + timerPad
+    if usedRows > 0 then
+        height = usedRows * (rowH + timerPad) + (usedRows - 1) * rowGap
     end
 
     if width < 1 then
@@ -643,6 +666,22 @@ addon:RegisterFeature(KEY, {
             end,
             min = 1,
             max = 12,
+            step = 1,
+            width = 200,
+            callback = RequestRefreshAll,
+        })
+
+        C:AddSlider(section, {
+            label = L["Buff Rows"],
+            desc = L["Layout buff icons in one or two rows."],
+            getFunc = function()
+                return (Cfg() and Cfg().rows) or 2
+            end,
+            setFunc = function(val)
+                Cfg().rows = val
+            end,
+            min = 1,
+            max = 2,
             step = 1,
             width = 200,
             callback = RequestRefreshAll,
