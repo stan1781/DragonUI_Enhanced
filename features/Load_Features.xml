@@ -11,4 +11,5 @@
 	<Script file="inspect_gemenchant.lua"/>
 	<Include file="InfoWindow.xml"/>
 	<Script file="inspectpanel.lua"/>
+	<Script file="equipmenthelper.lua"/>
 </Ui>

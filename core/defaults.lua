@@ -54,6 +54,13 @@ addon.defaults = {
                 offsetX = -20,
                 offsetY = 10,
             },
+            equipmentHelper = {
+                enabled = true,
+                anchor = "CENTER",
+                posX = 0,
+                posY = -180,
+                scale = 1,
+            },
         },
     },
     global = {
@@ -61,6 +68,7 @@ addon.defaults = {
         lfgBlockedPlayers = {},
         autoWhoLastScan = {},
         runeActionBar = { chars = {} },
+        equipment = { chars = {} },
         version = 1,
     },
 }
