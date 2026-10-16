@@ -7,7 +7,7 @@
 ## Version: 0.6.1
 ## SavedVariables: DragonUI_EnhancedDB
 ## Dependencies: DragonUI
-## OptionalDeps: DragonUI_Options
+## OptionalDeps: DragonUI_Options, BagSync
 ## X-License: MIT for project-authored code; bundled dependencies retain their own licenses
 
 # LIBS

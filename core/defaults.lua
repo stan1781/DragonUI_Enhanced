@@ -21,6 +21,17 @@ addon.defaults = {
                 posX = 0,
                 posY = 120,
             },
+            infoBar = {
+                enabled = true,
+                fontSize = 11,
+                anchor = "TOPLEFT",
+                posX = 20,
+                posY = -8,
+                showTokens = true,
+                showFps = true,
+                showLatency = true,
+                showSocial = true,
+            },
             buffKeyword = {
                 enabled = true,
                 -- keywords = nil means use built-in DEFAULT_KEYWORDS
