@@ -56,6 +56,13 @@ local function HidePartyFrames()
             PartyMemberBackground:Hide()
         end
     end
+    -- Party aura icons are parented to UIParent, so they stay up after the unit frame hides.
+    for i = 1, MAX_PARTY do
+        local host = _G["DragonUI_Enhanced_PartyAura" .. i]
+        if host and host:IsShown() then
+            host:Hide()
+        end
+    end
 end
 
 local function RestorePartyFrames()
@@ -81,6 +88,7 @@ local function RestorePartyFrames()
     for i = 1, MAX_PARTY do
         local frame = _G["PartyMemberFrame" .. i]
         if frame and UnitExists("party" .. i) then
+            -- Refreshes the unit frame and the Enhanced aura icons hooked to it.
             PartyMemberFrame_UpdateMember(frame)
         end
     end

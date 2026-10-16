@@ -347,7 +347,8 @@ RefreshHost = function(index)
         ApplyNativeBuffSuppress()
     end
 
-    if not UnitExists(unit) or not parent:IsShown() then
+    -- Hosts sit on UIParent, so a hidden or fully transparent party frame would leave icons behind.
+    if not UnitExists(unit) or not parent:IsShown() or parent:GetAlpha() <= 0 then
         host:SetScript("OnUpdate", nil)
         host:Hide()
         HideIconFrom(host, 1)
