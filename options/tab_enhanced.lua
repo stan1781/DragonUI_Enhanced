@@ -60,6 +60,15 @@ local function BuildCategory(scroll, categoryKey)
         return
     end
     local C = _G.DragonUI.PanelControls
+
+    if categoryKey == "general" and addon.BuildLegacyOptions then
+        local legacySection = C:AddSection(scroll, L["Legacy AddOns"])
+        local okLegacy, errLegacy = pcall(addon.BuildLegacyOptions, addon, legacySection, C)
+        if not okLegacy and _G.DragonUI and _G.DragonUI.Debug then
+            _G.DragonUI:Debug("Enhanced legacy section failed: " .. tostring(errLegacy))
+        end
+    end
+
     local list = addon:GetFeaturesByCategory(categoryKey)
 
     if #list == 0 then

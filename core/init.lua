@@ -219,6 +219,11 @@ function addon.core:OnInitialize()
     self:RegisterChatCommand("dragonuie", function()
         addon:OpenOptions()
     end)
+    self:RegisterChatCommand("duielegacy", function()
+        if addon.ReportLegacyAddons then
+            addon:ReportLegacyAddons(true)
+        end
+    end)
 
     addon.db.RegisterCallback(addon.core, "OnProfileChanged", "OnProfileRefresh")
     addon.db.RegisterCallback(addon.core, "OnProfileCopied", "OnProfileRefresh")
@@ -236,4 +241,10 @@ end
 function addon.core:OnEnable()
     addon.RefreshLocale()
     addon:ApplyAllFeatures()
+    -- After features start, remind about overlapping standalone addons.
+    self:ScheduleTimer(function()
+        if addon.MaybeWarnLegacyAddons then
+            addon:MaybeWarnLegacyAddons()
+        end
+    end, 3)
 end
