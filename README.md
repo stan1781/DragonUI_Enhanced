@@ -48,7 +48,7 @@ DragonUI 增强模块（WotLK 3.3.5a）。依赖 **DragonUI**；设置页挂在 
 ## 明确不做（或 P6）
 
 - WhisperInvite、装备出处 tooltip；旧斜杠命令已改由设置页按钮操作
-- bbRotHelper（另开独立插件）
+- bbRotHelper → 独立插件 [DragonUI_RotHelper](../DragonUI_RotHelper)（自绘设置窗，不并入本插件）
 - Unitscan 整功能、ArenaScreenshot、MemoriesData、YssBossLootData、ElvUI 配置导入
 
 ## 版本
