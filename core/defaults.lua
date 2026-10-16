@@ -17,6 +17,19 @@ addon.defaults = {
                 enabled = true,
                 -- keywords = nil means use built-in DEFAULT_KEYWORDS
             },
+            partyauras = {
+                enabled = true,
+                anchor = "LEFT",
+                size = 18,
+                spacing = 1,
+                maxBuffs = 6,
+                maxDebuffs = 4,
+                showClassBuffs = true,
+                showDispellable = true,
+                showImportantDebuffs = true,
+                showAllDispellable = false,
+                showTimers = true,
+            },
             chatFilter = {
                 enabled = true,
                 filterTelegramTip = true,

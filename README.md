@@ -11,6 +11,7 @@ DragonUI 增强模块（WotLK 3.3.5a）。依赖 **DragonUI**；设置页挂在 
 | 通用 | 移动速度 | 玩家/目标移速百分比，可拖动 |
 | 通用 | Buff 关键词屏蔽 | 目标/焦点/队伍垃圾光环 |
 | 战斗 | 技能触发提醒 | 大灾变风格 Overlay + DragonUI 动作条发光（替代 ElvUI_VisualProcs） |
+| 战斗 | 队伍光环 | 队伍框重要职业 buff + 可驱散/重要 debuff（有才显示；默认可左/右/下） |
 | 聊天 | LFG Bot 屏蔽 | bot 公会/角色、Telegram 系统提示、主城 `/who` |
 | 聊天 | 聊天增强 | 频道缩写、时间戳、Tab 切频道、`/duieroll` |
 | 聊天 | 快捷聊天栏 | 频道按钮 + 表情面板，可拖动 |

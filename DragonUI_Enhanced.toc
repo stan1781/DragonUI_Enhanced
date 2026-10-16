@@ -4,7 +4,7 @@
 ## Title-zhCN: |cff1784d1DragonUI|r |cffffffff增强|r
 ## Notes-zhCN: |cffcaf7faDragonUI 增强模块（移动速度、聊天栏、bbTools 等）|r
 ## Author: 斑比
-## Version: 0.6.0
+## Version: 0.6.1
 ## SavedVariables: DragonUI_EnhancedDB
 ## Dependencies: DragonUI
 ## OptionalDeps: DragonUI_Options
@@ -33,6 +33,7 @@ core\theme.lua
 
 # DATA
 data\lfg_blocked_players.lua
+data\party_aura_spells.lua
 
 # FEATURES
 features\Load_Features.xml
