@@ -1,0 +1,6 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<!-- Bare shell; ForeverUI.SkinDialog supplies DragonUI chrome in inspectpanel.lua -->
+	<Frame name="DragonUI_Enhanced_InfoWindow" toplevel="true" enableMouse="true" framestrata="HIGH" parent="UIParent" hidden="true">
+		<Size x="380" y="470"/>
+	</Frame>
+</Ui>

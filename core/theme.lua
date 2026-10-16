@@ -54,6 +54,34 @@ end
 function addon.theme:ApplyFont(fontString, size)
     if not fontString then return end
     size = size or 11
-    fontString:SetFont(STANDARD_TEXT_FONT, size)
+    local path = self:GetPrimaryFont()
+    fontString:SetFont(path, size)
     fontString:SetTextColor(1, 1, 1)
+end
+
+function addon.theme:GetForeverUI()
+    local DUI = Host()
+    return DUI and DUI.ForeverUI or nil
+end
+
+function addon.theme:GetPrimaryFont()
+    local DUI = Host()
+    if DUI and DUI.Fonts and DUI.Fonts.PRIMARY then
+        return DUI.Fonts.PRIMARY
+    end
+    return STANDARD_TEXT_FONT
+end
+
+function addon.theme:GetChromeColors()
+    local FUI = self:GetForeverUI()
+    return (FUI and FUI.Colors) or nil
+end
+
+-- Skin an existing frame with ForeverUI diamond-metal dialog chrome (DragonUI look).
+function addon.theme:SkinDialog(frame, opts)
+    local FUI = self:GetForeverUI()
+    if FUI and FUI.SkinDialog then
+        return FUI.SkinDialog(frame, opts or {})
+    end
+    return nil
 end

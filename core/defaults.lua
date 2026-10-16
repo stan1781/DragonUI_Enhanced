@@ -46,6 +46,14 @@ addon.defaults = {
             runeBar = {
                 enabled = true,
             },
+            inspectPanel = {
+                enabled = true,
+                charWindow = true,
+                inspectWindow = true,
+                -- Negative X pulls the list toward Character/Inspect (ForeverUI chrome needs a bit of overlap).
+                offsetX = -20,
+                offsetY = 10,
+            },
         },
     },
     global = {

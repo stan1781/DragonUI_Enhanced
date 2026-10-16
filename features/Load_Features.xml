@@ -6,4 +6,9 @@
 	<Script file="chatemote.lua"/>
 	<Script file="chatbar.lua"/>
 	<Script file="runebar.lua"/>
+	<Script file="inspect_gem.lua"/>
+	<Script file="inspect_enchant.lua"/>
+	<Script file="inspect_gemenchant.lua"/>
+	<Include file="InfoWindow.xml"/>
+	<Script file="inspectpanel.lua"/>
 </Ui>
