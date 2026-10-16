@@ -60,6 +60,8 @@ L["Own Debuffs Only"] = "只显示自己的减益"
 L["On target and focus, show only debuffs cast by you or your pet. Debuffs with an unknown caster are hidden."] = "目标和焦点上只显示你或你的宠物施放的减益。施法者未知的减益会被隐藏。"
 
 L["Party Auras"] = "队伍光环"
+L["Hide Party Frames in Raid"] = "进团隐藏队伍框"
+L["Hide DragonUI party frames while you are in a raid. They come back when you return to a party."] = "进入团队（转团、团本、战场）时隐藏 DragonUI 默认队伍框，回到小队后恢复。"
 L["Show all party member buffs on the party frames. Hides the default party buff icons. Debuffs stay on the Blizzard/DragonUI frames."] = "在队伍框上显示队友全部增益；启用时隐藏原生队伍 Buff 图标。Debuff 仍由 Blizzard/DragonUI 显示。"
 L["Shows every helpful aura (junk keywords still filtered). Default anchor is left of the party frame; native buff icons are hidden while enabled."] = "显示全部有益光环（仍受 Buff 关键词屏蔽）。默认挂在队伍框左侧；启用期间隐藏原生 Buff 图标。"
 L["Aura Anchor"] = "光环位置"

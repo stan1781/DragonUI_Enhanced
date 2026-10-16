@@ -20,6 +20,9 @@ addon.defaults = {
             ownDebuffs = {
                 enabled = false,
             },
+            hidePartyInRaid = {
+                enabled = true,
+            },
             partyauras = {
                 enabled = true,
                 anchor = "LEFT",
