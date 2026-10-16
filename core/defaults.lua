@@ -17,6 +17,9 @@ addon.defaults = {
                 enabled = true,
                 -- keywords = nil means use built-in DEFAULT_KEYWORDS
             },
+            ownDebuffs = {
+                enabled = false,
+            },
             partyauras = {
                 enabled = true,
                 anchor = "LEFT",

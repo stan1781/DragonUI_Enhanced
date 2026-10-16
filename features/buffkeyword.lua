@@ -1,6 +1,7 @@
 -- DragonUI_Enhanced — buff keyword blocklist for target/focus/party.
 -- Ported from ElvUI UnitFrames/Elements/Auras.lua (keyword filter only).
 -- Wraps UnitBuff so Blizzard TargetFrame/PartyMemberFrame skip blocked auras without gaps.
+-- Also remaps GameTooltip:SetUnitBuff indices (C API ignores the Lua UnitBuff wrap).
 
 local ADDON_NAME, addon = ...
 local L = addon.L
@@ -20,6 +21,7 @@ local DEFAULT_KEYWORDS = {
 }
 
 local rawUnitBuff = UnitBuff
+local rawSetUnitBuff
 local wrapInstalled = false
 local active = false
 
@@ -59,11 +61,9 @@ local function IsBuffBlockedByKeyword(name, skipKeyword)
     return false
 end
 
-local function FilteredUnitBuff(unit, index, filter)
-    if not active or type(index) ~= "number" or not ShouldFilterUnit(unit) then
-        return rawUnitBuff(unit, index, filter)
-    end
-
+-- Map a filtered (display) buff index to the real UnitBuff index.
+-- Returns realIndex, resultsTable; or nil when the display index is past the end.
+local function MapVirtualBuffIndex(unit, index, filter)
     -- Match ElvUI: on target, allow auras whose only hit is the "天命" keyword.
     local skipKeyword = (unit == "target") and "天命" or nil
     local shown = 0
@@ -78,7 +78,7 @@ local function FilteredUnitBuff(unit, index, filter)
         if not IsBuffBlockedByKeyword(name, skipKeyword) then
             shown = shown + 1
             if shown == index then
-                return unpack(results)
+                return real, results
             end
         end
         if real > 80 then
@@ -87,11 +87,44 @@ local function FilteredUnitBuff(unit, index, filter)
     end
 end
 
+local function FilteredUnitBuff(unit, index, filter)
+    if not active or type(index) ~= "number" or not ShouldFilterUnit(unit) then
+        return rawUnitBuff(unit, index, filter)
+    end
+    local _, results = MapVirtualBuffIndex(unit, index, filter)
+    if not results then
+        return nil
+    end
+    return unpack(results)
+end
+
+local function FilteredSetUnitBuff(self, unit, index, filter)
+    if active and type(index) == "number" and ShouldFilterUnit(unit) then
+        local real = MapVirtualBuffIndex(unit, index, filter)
+        if not real then
+            return
+        end
+        index = real
+    end
+    return rawSetUnitBuff(self, unit, index, filter)
+end
+
 local function InstallWrap()
     if wrapInstalled then return end
     rawUnitBuff = UnitBuff
     _G.UnitBuff = FilteredUnitBuff
     wrapInstalled = true
+end
+
+local function InstallTooltipHook()
+    if rawSetUnitBuff then
+        return
+    end
+    if not GameTooltip or type(GameTooltip.SetUnitBuff) ~= "function" then
+        return
+    end
+    rawSetUnitBuff = GameTooltip.SetUnitBuff
+    GameTooltip.SetUnitBuff = FilteredSetUnitBuff
 end
 
 local function RefreshFrames()
@@ -135,6 +168,7 @@ end
 
 local function OnEnable()
     InstallWrap()
+    InstallTooltipHook()
     active = true
     RefreshFrames()
 end
@@ -199,5 +233,6 @@ addon:RegisterFeature(KEY, {
 -- Expose for diagnostics / other features.
 addon.BuffKeyword = {
     IsBlocked = IsBuffBlockedByKeyword,
+    MapIndex = MapVirtualBuffIndex,
     Defaults = DEFAULT_KEYWORDS,
 }

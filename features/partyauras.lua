@@ -13,7 +13,7 @@ local TIMER_FONT_SIZE = 11
 local TIMER_BELOW_PAD = 12
 
 local UnitExists = UnitExists
-local UnitBuff = UnitBuff
+-- Use global UnitBuff at call time so buffkeyword's filter wrap applies.
 local GetTime = GetTime
 local CreateFrame = CreateFrame
 local pairs = pairs
@@ -247,7 +247,7 @@ local function CollectBuffs(unit, maxBuffs, out)
     wipe(scratchBuffs)
     local i = 1
     while #scratchBuffs < maxBuffs do
-        local name, _, texture, count, _, duration, expiration = UnitBuff(unit, i)
+        local name, _, texture, count, _, duration, expiration = _G.UnitBuff(unit, i)
         if not name then
             break
         end
