@@ -1,5 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
 	<Script file="motionspeed.lua"/>
+	<Script file="worldstate.lua"/>
 	<Script file="buffkeyword.lua"/>
 	<Script file="owndebuffs.lua"/>
 	<Script file="targetdebufftop.lua"/>

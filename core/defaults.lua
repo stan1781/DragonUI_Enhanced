@@ -5,6 +5,14 @@ local ADDON_NAME, addon = ...
 addon.defaults = {
     profile = {
         features = {
+            worldState = {
+                enabled = true,
+                anchor = "TOPLEFT",
+                relPoint = "TOPLEFT",
+                posX = 0,
+                posY = -40,
+                custom_position = false,
+            },
             motionSpeed = {
                 enabled = true,
                 fontSize = 11,

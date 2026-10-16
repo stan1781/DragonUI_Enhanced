@@ -218,3 +218,8 @@ L["Remember rune spells on the action bar and put them back after gear swaps."] 
 L["Use the buttons below to snapshot or restore rune spells on the action bar."] = "用下方按钮记住或回填动作条上的符文技能。"
 L["Save Action Bar Now"] = "立即记住动作条"
 L["Restore Now"] = "立即尝试回填"
+
+L["World State"] = "世界状态"
+L["Drag the challenge and battleground world-state list from DragonUI editor mode. The whole column moves together."] = "在 DragonUI 布局编辑里拖动挑战与战场世界状态。整列一起移动。"
+L["Open DragonUI editor mode and drag the World State box. Outside a challenge or battleground, the box shows a sample list."] = "打开 DragonUI 布局编辑，拖动「世界状态」框。不在挑战或战场中时，框里显示示例列表。"
+L["Reset World State Position"] = "重置世界状态位置"
