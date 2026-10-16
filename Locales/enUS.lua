@@ -69,7 +69,7 @@ L["Icon Size"] = "图标大小"
 L["Icon Spacing"] = "图标间距"
 L["Max Buff Icons"] = "Buff 数量上限"
 L["Buff Rows"] = "Buff 行数"
-L["Layout buff icons in one or two rows."] = "将增益图标排成一行或两行。"
+L["Layout buff icons in one or two rows."] = "一行或两行。两行时先填满第一行，超出的再放到第二行。"
 L["Show Aura Timers"] = "显示光环倒计时"
 L["Show remaining time below icons as 5m / 12s. Hidden for permanent auras."] = "在图标下方显示剩余时间（如 5m、12s）；永久光环不显示。"
 

@@ -7,7 +7,7 @@ local L = addon.L
 local KEY = "partyauras"
 local MAX_PARTY = 4
 local MAX_NATIVE_BUFFS = 4
-local POOL_SIZE = 12
+local POOL_SIZE = 20
 local TIMER_FONT_SIZE = 11
 -- Reserved space below each icon row so duration text does not sit inside the icon.
 local TIMER_BELOW_PAD = 12
@@ -384,9 +384,10 @@ RefreshHost = function(index)
     local usedRows = 0
 
     if #buffs > 0 then
-        local perRow = #buffs
+        -- Fill row 1 first (capacity = ceil(maxBuffs / rows)); overflow goes to later rows.
+        local perRow = maxBuffs
         if rows > 1 then
-            perRow = ceil(#buffs / rows)
+            perRow = ceil(maxBuffs / rows)
         end
         local from = 1
         while from <= #buffs do
@@ -402,6 +403,9 @@ RefreshHost = function(index)
                 buffW = width
             end
             from = to + 1
+            if usedRows >= rows then
+                break
+            end
         end
         if showTimers then
             for n = 1, #buffs do
@@ -665,7 +669,7 @@ addon:RegisterFeature(KEY, {
                 Cfg().maxBuffs = val
             end,
             min = 1,
-            max = 12,
+            max = 20,
             step = 1,
             width = 200,
             callback = RequestRefreshAll,
