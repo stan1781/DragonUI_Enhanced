@@ -1,4 +1,5 @@
--- DragonUI_Enhanced — ChatBar P1: channel shorten, timestamp, Tab cycle, dice.
+-- DragonUI_Enhanced — ChatBar P1: channel shorten, timestamp, Tab cycle, dice,
+-- plus persistent chat editbox history (ElvUI-style).
 -- Uses chained wrappers (no blind global overwrite). No chat-copy / link-hover.
 
 local ADDON_NAME, addon = ...
@@ -10,6 +11,8 @@ local find = string.find
 local strsub = string.sub
 local tostring = tostring
 local ipairs = ipairs
+local tinsert = table.insert
+local tremove = table.remove
 
 local KEY = "chatEnhance"
 
@@ -20,6 +23,24 @@ local tabInstalled = false
 local tagsApplied = false
 local savedTags = {}
 local slashRegistered = false
+local historyInstalled = false
+local restoringHistory = false
+
+-- Combat/secure macros: keep out of SavedVariables (session ↑/↓ still works).
+-- Utility cmds like /rl /reload /logout are persisted on purpose.
+local SECURE_SLASH = {
+    "^/assist",
+    "^/cancelaura",
+    "^/cancelform",
+    "^/cast",
+    "^/castsequence",
+    "^/equip",
+    "^/startattack",
+    "^/stopattack",
+    -- "^/tar",
+    -- "^/target",
+    "^/use",
+}
 
 local TAG_KEYS = {
     "CHAT_GUILD_GET", "CHAT_OFFICER_GET",
@@ -347,6 +368,128 @@ local function RegisterDiceSlash()
     slashRegistered = true
 end
 
+-- ---------------------------------------------------------------------------
+-- Persistent editbox history (↑/↓ across reload / logout)
+-- ---------------------------------------------------------------------------
+
+local function GetEditHistory()
+    if not addon.db or not addon.db.char then
+        return nil
+    end
+    local history = addon.db.char.chatEditHistory
+    if type(history) ~= "table" then
+        history = {}
+        addon.db.char.chatEditHistory = history
+    end
+    return history
+end
+
+local function TrimText(text)
+    if strtrim then
+        return strtrim(text)
+    end
+    return (tostring(text or ""):match("^%s*(.-)%s*$")) or ""
+end
+
+local function IsSecureSlash(text)
+    for i = 1, #SECURE_SLASH do
+        if find(text, SECURE_SLASH[i]) then
+            return true
+        end
+    end
+    return false
+end
+
+local function PersistEditHistory(text)
+    if restoringHistory or not active then
+        return
+    end
+    local cfg = Cfg()
+    if not cfg or cfg.editHistory == false then
+        return
+    end
+
+    text = TrimText(text)
+    if text == "" or IsSecureSlash(text) then
+        return
+    end
+
+    local history = GetEditHistory()
+    if not history then
+        return
+    end
+
+    for i = 1, #history do
+        if history[i] == text then
+            tremove(history, i)
+            break
+        end
+    end
+    tinsert(history, text)
+
+    local maxSize = tonumber(cfg.editHistorySize) or 20
+    if maxSize < 1 then
+        maxSize = 1
+    end
+    while #history > maxSize do
+        tremove(history, 1)
+    end
+end
+
+local function ClearEditHistory()
+    local history = GetEditHistory()
+    if history then
+        wipe(history)
+    end
+end
+
+local function RestoreEditHistory()
+    local history = GetEditHistory()
+    if not history or #history == 0 then
+        return
+    end
+
+    restoringHistory = true
+    local n = NUM_CHAT_WINDOWS or 10
+    for i = 1, n do
+        local editbox = _G["ChatFrame" .. i .. "EditBox"]
+        if editbox and editbox.AddHistoryLine then
+            for j = 1, #history do
+                editbox:AddHistoryLine(history[j])
+            end
+        end
+    end
+    restoringHistory = false
+end
+
+local function HookEditBoxHistory(editbox)
+    if not editbox or editbox.DragonUIEnhancedHistoryHooked then
+        return
+    end
+    local orig = editbox.AddHistoryLine
+    if type(orig) ~= "function" then
+        return
+    end
+    editbox.AddHistoryLine = function(self, text)
+        orig(self, text)
+        PersistEditHistory(text)
+    end
+    editbox.DragonUIEnhancedHistoryHooked = true
+end
+
+local function InstallEditHistory()
+    if historyInstalled then
+        return
+    end
+    -- Restore before hooks so replaying AddHistoryLine does not re-persist.
+    RestoreEditHistory()
+    local n = NUM_CHAT_WINDOWS or 10
+    for i = 1, n do
+        HookEditBoxHistory(_G["ChatFrame" .. i .. "EditBox"])
+    end
+    historyInstalled = true
+end
+
 local function RefreshAddMessageState()
     -- Wrappers stay installed; ProcessMessage checks cfg flags while active.
 end
@@ -359,13 +502,14 @@ local function OnEnable()
     end
     InstallTabHandler()
     RegisterDiceSlash()
+    InstallEditHistory()
     RefreshAddMessageState()
 end
 
 local function OnDisable()
     active = false
     RestoreChatTags()
-    -- AddMessage / Tab wrappers stay for safety (requiresReload recommended for full undo)
+    -- AddMessage / Tab / history wrappers stay for safety (requiresReload recommended for full undo)
 end
 
 addon:RegisterFeature(KEY, {
@@ -374,7 +518,7 @@ addon:RegisterFeature(KEY, {
     requiresReload = true,
     label = function() return L["Chat Enhance"] end,
     desc = function()
-        return L["Channel shorten, timestamps, Tab channel cycle, and /duieroll dice."]
+        return L["Channel shorten, timestamps, Tab channel cycle, edit history, and /duieroll dice."]
     end,
     OnEnable = OnEnable,
     OnDisable = OnDisable,
@@ -411,6 +555,41 @@ addon:RegisterFeature(KEY, {
             setFunc = function(val)
                 Cfg().dice = val and true or false
             end,
+        })
+        C:AddToggle(section, {
+            label = L["Remember Chat Input History"],
+            desc = L["Keep sent chat lines across reload and logout. Use Up/Down to browse."],
+            getFunc = function() return Cfg().editHistory ~= false end,
+            setFunc = function(val)
+                Cfg().editHistory = val and true or false
+            end,
+        })
+        C:AddSlider(section, {
+            label = L["Chat Input History Size"],
+            desc = L["Maximum number of remembered input lines."],
+            min = 5,
+            max = 50,
+            step = 1,
+            getFunc = function() return Cfg().editHistorySize or 20 end,
+            setFunc = function(val)
+                Cfg().editHistorySize = math.floor(val + 0.5)
+                local history = GetEditHistory()
+                if history then
+                    local maxSize = Cfg().editHistorySize or 20
+                    while #history > maxSize do
+                        tremove(history, 1)
+                    end
+                end
+            end,
+            disabled = function() return Cfg().editHistory == false end,
+        })
+        C:AddButton(section, {
+            label = L["Clear Chat Input History"],
+            desc = L["Clear saved history for this character. Reload to clear the current session list."],
+            callback = function()
+                ClearEditHistory()
+            end,
+            disabled = function() return Cfg().editHistory == false end,
         })
         C:AddEditBox(section, {
             label = L["World Channel Keywords"],
