@@ -622,12 +622,12 @@ addon:RegisterFeature(KEY, {
     requiresReload = true,
     label = function() return L["Equipment List Panel"] end,
     desc = function()
-        return L["TinyInspect-style gear list beside Character and Inspect windows, with gems/enchants."]
+        return L["Gear list beside Character and Inspect windows, with gems/enchants."]
     end,
     OnEnable = OnEnable,
     OnDisable = OnDisable,
     BuildOptions = function(section, C)
-        C:AddDescription(section, L["Disable TinyInspect addon to avoid two panels. Drag is not needed — panel attaches to the right of Character/Inspect."])
+        C:AddDescription(section, L["Panel attaches to the right of Character/Inspect. Disable the old standalone equipment-list addon to avoid two panels."])
         C:AddToggle(section, {
             label = L["Character equipment list"],
             desc = L["Show the list when opening the character window."],

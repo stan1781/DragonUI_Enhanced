@@ -1010,7 +1010,7 @@ addon:RegisterFeature(KEY, {
     OnEnable = OnEnable,
     OnDisable = OnDisable,
     BuildOptions = function(section, C)
-        C:AddDescription(section, L["Disable bbTools EquipmentHelper to avoid two bars. Right-click a set button to bind."])
+        C:AddDescription(section, L["Right-click a set button to bind talent/PvP/challenge. Shift+drag moves the bar."])
         C:AddToggle(section, {
             label = L["Auto-switch on talent change"],
             getFunc = function() return GetCharEquipmentDB().autoSwitchOnTalent ~= false end,

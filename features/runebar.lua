@@ -825,7 +825,7 @@ addon:RegisterFeature(KEY, {
 	OnEnable = OnEnable,
 	OnDisable = OnDisable,
 	BuildOptions = function(section, C)
-		C:AddDescription(section, L["Commands: /bbrune save | restore | dump | debug"])
+		C:AddDescription(section, L["Use the buttons below to snapshot or restore rune spells on the action bar."])
 		C:AddButton(section, {
 			label = L["Save Action Bar Now"],
 			callback = function()

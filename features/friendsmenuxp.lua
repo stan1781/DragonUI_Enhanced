@@ -35,6 +35,6 @@ addon:RegisterFeature(KEY, {
     OnEnable = OnEnable,
     OnDisable = OnDisable,
     BuildOptions = function(section, C)
-        C:AddDescription(section, L["Disable the standalone FriendsMenuXP addon. Alt+click a player link to invite; Ctrl+hover to target."])
+        C:AddDescription(section, L["Alt+click a player link to invite; Ctrl+hover to target. Disable the old standalone menu addon to avoid two menus."])
     end,
 })

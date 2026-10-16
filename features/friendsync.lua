@@ -1058,7 +1058,7 @@ addon:RegisterFeature(KEY, {
 	OnEnable = OnEnable,
 	OnDisable = OnDisable,
 	BuildOptions = function(section, C)
-		C:AddDescription(section, L["Use the buttons below, or FriendsMenuXP add/remove (sync) if installed. Alliance and Horde pools are separate."])
+		C:AddDescription(section, L["Use the buttons below, or add/remove friend (sync) from the player context menu. Alliance and Horde pools are separate."])
 		C:AddToggle(section, {
 			label = L["Auto-add on login"],
 			desc = L["On login, add friends from the shared pool that are missing on this character."],

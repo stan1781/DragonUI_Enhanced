@@ -31,7 +31,7 @@ L["(optional if you still need other bbTools modules)"] = "（若仍需 Unitscan
 L["legacy_MotionSpeed"] = "移动速度显示 → 请禁用 MotionSpeed"
 L["legacy_ChatBar"] = "频道缩写/时间戳/快捷栏/表情 → 请禁用 ChatBar"
 L["legacy_FriendsMenuXP"] = "玩家右键菜单 → 请禁用 FriendsMenuXP"
-L["legacy_TinyInspect"] = "角色/观察装备列表 → 请禁用 ElvUI_TinyInspect"
+L["legacy_TinyInspect"] = "装备列表 → 请禁用 ElvUI_TinyInspect"
 L["legacy_bbTools"] = "符文条/装备助手/好友同步已覆盖；整包可禁用"
 
 L["Buff Keyword Block"] = "Buff 关键词屏蔽"
@@ -63,9 +63,9 @@ L["Reset to Above Chat"] = "重置到聊天框上方"
 
 L["Avg. Item Level"] = "平均装等"
 
-L["Equipment List Panel"] = "装备列表面板"
-L["TinyInspect-style gear list beside Character and Inspect windows, with gems/enchants."] = "TinyInspect 风格装备列表：贴在角色/观察窗右侧，含宝石与附魔。"
-L["Disable TinyInspect addon to avoid two panels. Drag is not needed — panel attaches to the right of Character/Inspect."] = "请关闭 TinyInspect 以免双份面板。列表自动贴在角色/观察窗右侧。"
+L["Equipment List Panel"] = "装备列表"
+L["Gear list beside Character and Inspect windows, with gems/enchants."] = "贴在角色/观察窗旁的装备列表，含宝石与附魔。"
+L["Panel attaches to the right of Character/Inspect. Disable the old standalone equipment-list addon to avoid two panels."] = "列表自动贴在角色/观察窗右侧。请禁用旧的独立装备列表插件，以免双份面板。"
 L["Character equipment list"] = "角色装备列表"
 L["Show the list when opening the character window."] = "打开角色窗口时显示装备列表。"
 L["Inspect equipment list"] = "观察装备列表"
@@ -77,7 +77,7 @@ L["Positive moves the list up relative to the Character/Inspect top edge."] = "�
 
 L["Equipment Helper"] = "装备管理助手"
 L["Equipment set shortcut bar with talent/PvP/challenge auto-switch. Shift+drag to move."] = "装备方案快捷条，支持天赋/PvP/挑战自动换装。Shift+拖动移动位置。"
-L["Disable bbTools EquipmentHelper to avoid two bars. Right-click a set button to bind."] = "请关闭 bbTools 装备助手以免双份按钮。右键方案按钮可绑定。"
+L["Right-click a set button to bind talent/PvP/challenge. Shift+drag moves the bar."] = "右键方案按钮可绑定天赋/PvP/挑战；Shift+拖动移动按钮条。"
 L["Shift+drag to move. Right-click a set to bind talent/PvP/challenge."] = "Shift+拖动移动；右键方案绑定天赋/PvP/挑战。"
 L["Auto-switch on talent change"] = "切换天赋时自动换装"
 L["Auto-switch in PvP zones"] = "进入 PvP 区域自动换装"
@@ -86,7 +86,7 @@ L["Challenge min level"] = "挑战层数阈值"
 
 L["Friend Sync"] = "好友同步"
 L["Sync friends across alts per faction. Deletes go to a removed list so other characters clean up too."] = "按阵营在小号间同步好友。删除写入名单，其他角色登录后对照清理。"
-L["Use the buttons below, or FriendsMenuXP add/remove (sync) if installed. Alliance and Horde pools are separate."] = "用下方按钮操作；若安装了 FriendsMenuXP，加/删好友（同步）也会写入共享库。联盟与部落库分开。"
+L["Use the buttons below, or add/remove friend (sync) from the player context menu. Alliance and Horde pools are separate."] = "用下方按钮操作；玩家右键菜单中的加/删好友（同步）也会写入共享库。联盟与部落库分开。"
 L["Auto-add on login"] = "登录自动添加"
 L["On login, add friends from the shared pool that are missing on this character."] = "登录后把共享库里缺失的好友加到当前角色。默认关。"
 L["Auto-clean on login"] = "登录自动清理"
@@ -99,7 +99,7 @@ L["List removed"] = "查看删除名单"
 
 L["Player Context Menu"] = "玩家右键菜单"
 L["Extended right-click menu on player names (friends, chat links, guild). Class buff casts are not included."] = "在好友/聊天链接/公会等玩家名上扩展右键菜单。不含给队友施放职业 buff。"
-L["Disable the standalone FriendsMenuXP addon. Alt+click a player link to invite; Ctrl+hover to target."] = "请禁用独立 FriendsMenuXP。Alt+点击玩家链接邀请；Ctrl+悬停选定目标。"
+L["Alt+click a player link to invite; Ctrl+hover to target. Disable the old standalone menu addon to avoid two menus."] = "Alt+点击玩家链接邀请；Ctrl+悬停选定目标。请禁用旧的独立玩家菜单插件，以免双份菜单。"
 
 L["Cannot switch equipment sets in combat."] = "战斗中无法切换装备方案"
 L["Switched to set:"] = "已切换到装备方案："
@@ -167,6 +167,6 @@ L["Comma-separated names matched for Tab world-channel step. Default: 大脚世�
 
 L["Rune Action Bar Restore"] = "符文动作条恢复"
 L["Remember rune spells on the action bar and put them back after gear swaps."] = "记住动作条上的符文技能，换装后自动填回。"
-L["Commands: /bbrune save | restore | dump | debug"] = "命令：/bbrune save | restore | dump | debug"
+L["Use the buttons below to snapshot or restore rune spells on the action bar."] = "用下方按钮记住或回填动作条上的符文技能。"
 L["Save Action Bar Now"] = "立即记住动作条"
 L["Restore Now"] = "立即尝试回填"
