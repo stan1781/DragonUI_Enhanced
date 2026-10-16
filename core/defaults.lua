@@ -61,6 +61,12 @@ addon.defaults = {
                 posY = -180,
                 scale = 1,
             },
+            friendSync = {
+                enabled = true,
+            },
+            friendsMenuXP = {
+                enabled = true,
+            },
         },
     },
     global = {
@@ -69,6 +75,16 @@ addon.defaults = {
         autoWhoLastScan = {},
         runeActionBar = { chars = {} },
         equipment = { chars = {} },
+        friendSync = {
+            friendsByFaction = { Alliance = {}, Horde = {} },
+            removedByFaction = { Alliance = {}, Horde = {} },
+            friends = {},
+            chars = {},
+            settings = {
+                autoSyncOnLogin = false,
+                autoCleanOnLogin = true,
+            },
+        },
         version = 1,
     },
 }

@@ -12,4 +12,12 @@
 	<Include file="InfoWindow.xml"/>
 	<Script file="inspectpanel.lua"/>
 	<Script file="equipmenthelper.lua"/>
+	<Script file="friendsync.lua"/>
+	<!-- FriendsMenuXP embed (no SpellNames / class buffs) -->
+	<Script file="friendsmenuxp\localization.enUS.lua"/>
+	<Script file="friendsmenuxp\localization.zhCN.lua"/>
+	<Script file="friendsmenuxp\ButtonSet.lua"/>
+	<Script file="friendsmenuxp\FriendsMenuXP.lua"/>
+	<Include file="friendsmenuxp\FriendsMenuXP.xml"/>
+	<Script file="friendsmenuxp.lua"/>
 </Ui>
