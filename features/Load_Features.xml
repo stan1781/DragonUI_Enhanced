@@ -4,6 +4,7 @@
 	<Script file="owndebuffs.lua"/>
 	<Script file="partyauras.lua"/>
 	<Script file="hidepartyinraid.lua"/>
+	<Script file="targettip.lua"/>
 	<Script file="visualprocs.lua"/>
 	<Script file="chatfilter.lua"/>
 	<Script file="chatenhance.lua"/>

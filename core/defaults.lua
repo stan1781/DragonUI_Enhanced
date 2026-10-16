@@ -23,6 +23,9 @@ addon.defaults = {
             hidePartyInRaid = {
                 enabled = true,
             },
+            targetTip = {
+                enabled = true,
+            },
             partyauras = {
                 enabled = true,
                 anchor = "LEFT",
