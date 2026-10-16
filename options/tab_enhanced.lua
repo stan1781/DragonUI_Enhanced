@@ -119,7 +119,7 @@ local function TryRegister()
     if _G.DragonUI and _G.DragonUI.OptionsPanel then
         _G.DragonUI.OptionsPanel:RegisterTab(
             "enhanced",
-            L["Enhanced"] or "增强",
+            "增强 [by 斑比]",
             BuildEnhancedTab,
             1.6
         )

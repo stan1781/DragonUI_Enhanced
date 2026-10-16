@@ -9,6 +9,7 @@ local ROOT = "Interface\\AddOns\\DragonUI_Enhanced\\"
 addon.media.root = ROOT
 addon.media.textures = ROOT .. "Textures\\"
 addon.media.sounds = ROOT .. "Sounds\\"
+addon.media.emotion = ROOT .. "media\\Emotion\\"
 
 -- Shared Blizzard / DragonUI-friendly fallbacks used by early features.
 addon.media.icons = {

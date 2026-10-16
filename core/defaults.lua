@@ -23,12 +23,36 @@ addon.defaults = {
                 filterLFGGuilds = true,
                 autoWho = true,
             },
+            chatEnhance = {
+                enabled = true,
+                shortChannel = true,
+                timestamp = true,
+                tabSwitch = true,
+                dice = true,
+                -- worldChannelKeywords = nil → defaults
+            },
+            chatBar = {
+                enabled = true,
+                scale = 1,
+                -- 默认贴在 ChatFrame1 上方；拖动后改为 UIParent 绝对坐标
+                anchorToChat = true,
+                chatOffsetX = 0,
+                chatOffsetY = 4,
+                anchor = "BOTTOMLEFT",
+                posX = 16,
+                posY = 30,
+                -- lfgChannelName = nil → "寻求组队"
+            },
+            runeBar = {
+                enabled = true,
+            },
         },
     },
     global = {
         migrated = {},
         lfgBlockedPlayers = {},
         autoWhoLastScan = {},
+        runeActionBar = { chars = {} },
         version = 1,
     },
 }
