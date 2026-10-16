@@ -10,6 +10,7 @@
 	<Script file="partycastbar.lua"/>
 	<Script file="hidepartyinraid.lua"/>
 	<Script file="targettip.lua"/>
+	<Script file="deathrecap.lua"/>
 	<Script file="visualprocs.lua"/>
 	<Script file="chatfilter.lua"/>
 	<Script file="chatenhance.lua"/>

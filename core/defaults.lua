@@ -51,6 +51,9 @@ addon.defaults = {
             targetTip = {
                 enabled = true,
             },
+            deathRecap = {
+                enabled = true,
+            },
             partyauras = {
                 enabled = true,
                 anchor = "LEFT",
