@@ -20,6 +20,12 @@ addon.defaults = {
             ownDebuffs = {
                 enabled = false,
             },
+            targetDebuffTop = {
+                enabled = true,
+            },
+            playerHealthDebuffs = {
+                enabled = true,
+            },
             hidePartyInRaid = {
                 enabled = true,
             },

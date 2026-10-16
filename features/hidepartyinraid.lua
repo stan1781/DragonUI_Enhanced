@@ -1,7 +1,7 @@
--- DragonUI_Enhanced — hide default party frames while in a raid.
--- DragonUI only hides them when the hidePartyInRaid CVar is on, and this client
--- can still report a party after a raid convert. This feature hides the frames
--- after Blizzard and DragonUI show them again.
+-- DragonUI_Enhanced — hide default party frames in a raid group or raid instance.
+-- DragonUI shows PartyMemberFrame again about half a second after zoning, and a
+-- direct raid entry can still report party members. Re-apply the hide every frame
+-- while the player is in a raid so that later Show() calls do not stick.
 
 local ADDON_NAME, addon = ...
 local L = addon.L
@@ -10,39 +10,70 @@ local KEY = "hidePartyInRaid"
 local MAX_PARTY = 4
 
 local active = false
-local hooked = false
-
-local function InRaid()
-    return GetNumRaidMembers and GetNumRaidMembers() > 0
-end
+local forced = false
+local watch
 
 local function EditorOpen()
     local DUI = _G.DragonUI
-    return DUI and DUI.EditorMode and DUI.EditorMode:IsActive()
+    return DUI and DUI.EditorMode and DUI.EditorMode.IsActive and DUI.EditorMode:IsActive()
 end
 
-local function ShouldHide()
-    return active and InRaid() and not EditorOpen() and not InCombatLockdown()
+local function InRaidContext()
+    if UnitInRaid and UnitInRaid("player") then
+        return true
+    end
+    if GetNumRaidMembers and GetNumRaidMembers() > 0 then
+        return true
+    end
+    if IsInInstance then
+        local inInstance, instanceType = IsInInstance()
+        if inInstance and instanceType == "raid" then
+            return true
+        end
+    end
+    return false
 end
 
 local function HidePartyFrames()
-    if not ShouldHide() then
-        return
-    end
+    forced = true
+    local locked = InCombatLockdown()
     for i = 1, MAX_PARTY do
         local frame = _G["PartyMemberFrame" .. i]
-        if frame and frame:IsShown() then
-            frame:Hide()
+        if frame then
+            if frame:GetAlpha() ~= 0 then
+                frame:SetAlpha(0)
+            end
+            if not locked and frame:IsShown() then
+                frame:Hide()
+            end
         end
     end
-    if PartyMemberBackground and PartyMemberBackground:IsShown() then
-        PartyMemberBackground:Hide()
+    if PartyMemberBackground then
+        if PartyMemberBackground:GetAlpha() ~= 0 then
+            PartyMemberBackground:SetAlpha(0)
+        end
+        if not locked and PartyMemberBackground:IsShown() then
+            PartyMemberBackground:Hide()
+        end
     end
 end
 
 local function RestorePartyFrames()
+    if not forced then
+        return
+    end
     if InCombatLockdown() or EditorOpen() then
         return
+    end
+    forced = false
+    for i = 1, MAX_PARTY do
+        local frame = _G["PartyMemberFrame" .. i]
+        if frame and frame:GetAlpha() == 0 then
+            frame:SetAlpha(1)
+        end
+    end
+    if PartyMemberBackground and PartyMemberBackground:GetAlpha() == 0 then
+        PartyMemberBackground:SetAlpha(1)
     end
     if type(PartyMemberFrame_UpdateMember) ~= "function" then
         return
@@ -55,74 +86,36 @@ local function RestorePartyFrames()
     end
 end
 
-local function InstallHooks()
-    if hooked then
-        return
-    end
-    hooked = true
-
-    for i = 1, MAX_PARTY do
-        local frame = _G["PartyMemberFrame" .. i]
-        if frame and not frame.DragonUIEnhanced_HideInRaid then
-            hooksecurefunc(frame, "Show", function(self)
-                if ShouldHide() then
-                    self:Hide()
-                end
-            end)
-            frame.DragonUIEnhanced_HideInRaid = true
-        end
-    end
-
-    if type(PartyMemberFrame_UpdateMember) == "function" then
-        hooksecurefunc("PartyMemberFrame_UpdateMember", function()
-            HidePartyFrames()
-        end)
-    end
-end
-
-local eventFrame
-
-local function OnEvent(self, event)
-    if event == "PLAYER_REGEN_ENABLED" then
-        if active and InRaid() then
-            HidePartyFrames()
-        elseif not active then
+local function OnUpdate()
+    if not active or EditorOpen() then
+        if forced then
             RestorePartyFrames()
         end
         return
     end
-    if active and InRaid() then
+    if InRaidContext() then
         HidePartyFrames()
+    elseif forced then
+        RestorePartyFrames()
     end
-end
-
-local function EnsureEvents()
-    if eventFrame then
-        return
-    end
-    eventFrame = CreateFrame("Frame")
-    eventFrame:SetScript("OnEvent", OnEvent)
 end
 
 local function OnEnable()
     active = true
-    EnsureEvents()
-    eventFrame:RegisterEvent("PARTY_MEMBERS_CHANGED")
-    eventFrame:RegisterEvent("RAID_ROSTER_UPDATE")
-    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
-    InstallHooks()
-    HidePartyFrames()
+    if not watch then
+        watch = CreateFrame("Frame")
+        watch:SetScript("OnUpdate", OnUpdate)
+    end
+    watch:Show()
+    OnUpdate()
 end
 
 local function OnDisable()
     active = false
-    if eventFrame then
-        eventFrame:UnregisterAllEvents()
+    if watch then
+        watch:Hide()
     end
-    if InRaid() then
-        RestorePartyFrames()
-    end
+    RestorePartyFrames()
 end
 
 addon:RegisterFeature(KEY, {

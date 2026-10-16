@@ -2,6 +2,8 @@
 	<Script file="motionspeed.lua"/>
 	<Script file="buffkeyword.lua"/>
 	<Script file="owndebuffs.lua"/>
+	<Script file="targetdebufftop.lua"/>
+	<Script file="playerhealthdebuffs.lua"/>
 	<Script file="partyauras.lua"/>
 	<Script file="hidepartyinraid.lua"/>
 	<Script file="targettip.lua"/>

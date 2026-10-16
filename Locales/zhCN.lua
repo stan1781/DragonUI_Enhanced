@@ -56,6 +56,10 @@ L["Press Enter to save. Leave empty to restore the default keyword list."] = "�
 L["Reset Keywords"] = "重置关键词"
 L["Restore the default junk-buff keyword list."] = "恢复默认垃圾 buff 关键词列表。"
 
+L["Player Debuffs on Health"] = "玩家减益显示在血条上方"
+L["Show your timed debuffs above the player health bar. Debuffs with no duration are hidden."] = "在玩家血条上方显示自己的减益，只保留有持续时间的。没有计时的减益不显示。"
+L["Debuffs Above Health"] = "减益显示在血条上方"
+L["Show target and focus debuffs left-aligned above the health bar, across the bar and portrait. Buffs stay under the frame."] = "目标和焦点的减益从血条左上角向右排开，横跨血条和头像。没有倒计时，或持续超过 5 分钟的减益不显示。增益仍留在框体下方。"
 L["Own Debuffs Only"] = "只显示自己的减益"
 L["On target and focus, show only debuffs cast by you or your pet. Debuffs with an unknown caster are hidden."] = "目标和焦点上只显示你或你的宠物施放的减益。施法者未知的减益会被隐藏。"
 
