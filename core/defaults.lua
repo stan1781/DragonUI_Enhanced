@@ -38,6 +38,8 @@ addon.defaults = {
                 timestamp = true,
                 tabSwitch = true,
                 dice = true,
+                editHistory = true,
+                editHistorySize = 20,
                 -- worldChannelKeywords = nil → defaults
             },
             chatBar = {
@@ -84,6 +86,9 @@ addon.defaults = {
                 disableSound = false,
             },
         },
+    },
+    char = {
+        chatEditHistory = {},
     },
     global = {
         migrated = {},
