@@ -60,6 +60,9 @@ addon.defaults = {
                 rows = 2,
                 showTimers = true,
             },
+            partyCastbar = {
+                enabled = true,
+            },
             chatFilter = {
                 enabled = true,
                 filterTelegramTip = true,
