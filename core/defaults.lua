@@ -67,6 +67,13 @@ addon.defaults = {
             friendsMenuXP = {
                 enabled = true,
             },
+            visualprocs = {
+                enabled = true,
+                overlay = true,
+                buttonGlow = true,
+                overlayScale = 0.8,
+                disableSound = false,
+            },
         },
     },
     global = {

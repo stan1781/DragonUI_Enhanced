@@ -4,7 +4,7 @@
 ## Title-zhCN: |cff1784d1DragonUI|r |cffffffff增强|r
 ## Notes-zhCN: |cffcaf7faDragonUI 增强模块（移动速度、聊天栏、bbTools 等）|r
 ## Author: 斑比
-## Version: 0.5.0
+## Version: 0.6.0
 ## SavedVariables: DragonUI_EnhancedDB
 ## Dependencies: DragonUI
 ## OptionalDeps: DragonUI_Options
@@ -19,6 +19,7 @@ Libs\AceTimer-3.0\AceTimer-3.0.xml
 Libs\AceConsole-3.0\AceConsole-3.0.xml
 Libs\AceDB-3.0\AceDB-3.0.xml
 Libs\AceLocale-3.0\AceLocale-3.0-DragonUIEnhanced.xml
+Libs\LibBlizzardProcs\LibBlizzardProcs.xml
 
 # LOCALES
 Locales\Load_Locales.xml

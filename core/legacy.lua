@@ -32,6 +32,11 @@ local LEGACY = {
         -- Partial: keep if user still needs Unitscan remote / ArenaScreenshot / etc.
         soft = true,
     },
+    {
+        name = "ElvUI_VisualProcs",
+        features = "visualprocs",
+        noteKey = "legacy_VisualProcs",
+    },
 }
 
 local function AddonPresent(name)

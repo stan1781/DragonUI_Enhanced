@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0
+
+- 技能触发提醒：迁入 LibBlizzardProcs，在 DragonUI 动作条上复现 ElvUI_VisualProcs 的 Overlay + 按钮发光
+- 设置：增强 → 战斗；可开关 Overlay/Glow、缩放、静音、预览、重置位置
+- 旧插件清单增加 `ElvUI_VisualProcs`
+
 ## 0.5.0
 
 - P4：嵌入 FriendsMenuXP 玩家右键菜单（不含职业 buff / RaidGroupButton 安全属性写入）

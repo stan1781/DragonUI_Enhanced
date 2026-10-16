@@ -10,6 +10,7 @@ DragonUI 增强模块（WotLK 3.3.5a）。依赖 **DragonUI**；设置页挂在 
 |------|------|------|
 | 通用 | 移动速度 | 玩家/目标移速百分比，可拖动 |
 | 通用 | Buff 关键词屏蔽 | 目标/焦点/队伍垃圾光环 |
+| 战斗 | 技能触发提醒 | 大灾变风格 Overlay + DragonUI 动作条发光（替代 ElvUI_VisualProcs） |
 | 聊天 | LFG Bot 屏蔽 | bot 公会/角色、Telegram 系统提示、主城 `/who` |
 | 聊天 | 聊天增强 | 频道缩写、时间戳、Tab 切频道、`/duieroll` |
 | 聊天 | 快捷聊天栏 | 频道按钮 + 表情面板，可拖动 |
@@ -30,6 +31,7 @@ DragonUI 增强模块（WotLK 3.3.5a）。依赖 **DragonUI**；设置页挂在 
 | `FriendsMenuXP` | 已由增强覆盖 |
 | `ElvUI_TinyInspect` | 已由「装备列表」覆盖（装等仍用 DragonUI） |
 | `ElvUI_bbTools` | 符文/装备助手/好友同步已覆盖；若仍需 Unitscan 遥控、竞技场截图等可暂时保留 |
+| `ElvUI_VisualProcs` | 已由「技能触发提醒」覆盖（Overlay + 按钮发光） |
 
 **不要**为了本插件去禁用整个 `ElvUI_Enhanced`（只迁了 bot 过滤相关逻辑）。
 
@@ -48,7 +50,6 @@ DragonUI 增强模块（WotLK 3.3.5a）。依赖 **DragonUI**；设置页挂在 
 ## 明确不做（或 P6）
 
 - WhisperInvite、装备出处 tooltip；旧斜杠命令已改由设置页按钮操作
-- bbRotHelper → 独立插件 [DragonUI_RotHelper](../DragonUI_RotHelper)（自绘设置窗，不并入本插件）
 - Unitscan 整功能、ArenaScreenshot、MemoriesData、YssBossLootData、ElvUI 配置导入
 
 ## 版本
