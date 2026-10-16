@@ -1,0 +1,5 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="motionspeed.lua"/>
+	<Script file="buffkeyword.lua"/>
+	<Script file="chatfilter.lua"/>
+</Ui>

@@ -1,0 +1,39 @@
+## Interface: 30300
+## Title: |cff1784d1DragonUI|r |cffffffff增强|r
+## Notes: |cffcaf7faDragonUI 增强模块（移动速度、聊天栏、bbTools 等）|r
+## Title-zhCN: |cff1784d1DragonUI|r |cffffffff增强|r
+## Notes-zhCN: |cffcaf7faDragonUI 增强模块（移动速度、聊天栏、bbTools 等）|r
+## Author: 斑比
+## Version: 0.1.0
+## SavedVariables: DragonUI_EnhancedDB
+## Dependencies: DragonUI
+## OptionalDeps: DragonUI_Options
+## X-License: MIT for project-authored code; bundled dependencies retain their own licenses
+
+# LIBS
+Libs\LibStub\LibStub.xml
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\AceConsole-3.0\AceConsole-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceLocale-3.0\AceLocale-3.0-DragonUIEnhanced.xml
+
+# LOCALES
+Locales\Load_Locales.xml
+
+# CORE
+core\defaults.lua
+core\init.lua
+core\media.lua
+core\theme.lua
+
+# DATA
+data\lfg_blocked_players.lua
+
+# FEATURES
+features\Load_Features.xml
+
+# OPTIONS
+options\Load_Options.xml
