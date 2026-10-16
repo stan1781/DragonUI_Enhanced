@@ -1,41 +1,34 @@
--- DragonUI_Enhanced — party frame important buffs + dispellable/important debuffs.
--- Show-when-present only; mounts on PartyMemberFrame1-4. Unit-list ready for future raid.
+-- DragonUI_Enhanced — party frame buff icons (all helpful auras).
+-- Debuffs stay on Blizzard/DragonUI PartyMemberFrameNDebuff*. Mounts on PartyMemberFrame1-4.
 
 local ADDON_NAME, addon = ...
 local L = addon.L
 
 local KEY = "partyauras"
 local MAX_PARTY = 4
+local MAX_NATIVE_BUFFS = 4
 local POOL_SIZE = 12
+local TIMER_FONT_SIZE = 11
+-- Reserved space below each icon row so duration text does not sit inside the icon.
+local TIMER_BELOW_PAD = 12
 
 local UnitExists = UnitExists
 local UnitBuff = UnitBuff
-local UnitDebuff = UnitDebuff
-local UnitClass = UnitClass
-local GetSpellInfo = GetSpellInfo
 local GetTime = GetTime
 local CreateFrame = CreateFrame
 local pairs = pairs
 local wipe = wipe
-local strlower = string.lower
-local floor = math.floor
 local ceil = math.ceil
 local format = string.format
-
--- name(lower) -> { group, priority } built from buff spell IDs (fallback if spellId missing).
-local buffByName
--- name(lower) -> priority for important debuffs without spellId.
-local importantByName
+local hooksecurefunc = hooksecurefunc
 
 local eventFrame
 local hosts = {} -- [index] = host
 local pendingLayout = false
-local playerDispel
-local playerClass
+local nativeBuffSuppress = false
+local nativeBuffHooked = {}
 
-local scratchBuffBest = {}
-local scratchDebuffs = {}
-local scratchSeen = {}
+local scratchBuffs = {}
 
 local RefreshHost -- forward decl for timer OnUpdate
 
@@ -57,21 +50,6 @@ local function Cfg()
         end
     end
     return cfg
-end
-
-local function RefreshPlayerDispel()
-    playerClass = select(2, UnitClass("player"))
-    local map = addon.data and addon.data.partyAuraDispelByClass
-    playerDispel = map and map[playerClass] or nil
-end
-
-local function GetDebuffBorderColor(debuffType)
-    local colors = _G.DebuffTypeColor
-    local c = colors and colors[debuffType or ""]
-    if c then
-        return c.r, c.g, c.b
-    end
-    return 0.8, 0, 0
 end
 
 -- e.g. 5m / 12s (permanent auras return "").
@@ -169,6 +147,7 @@ local function AcquireIcon(host, index)
     border:SetTexture("Interface\\Buttons\\UI-Debuff-Overlays")
     border:SetAllPoints(btn)
     border:SetTexCoord(0.296875, 0.5703125, 0, 0.515625)
+    border:Hide()
     btn.border = border
 
     local count = btn:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
@@ -176,34 +155,19 @@ local function AcquireIcon(host, index)
     btn.count = count
 
     local timer = btn:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
-    timer:SetPoint("CENTER", btn, "CENTER", 0, 0)
+    timer:SetPoint("TOP", btn, "BOTTOM", 0, -1)
     timer:SetJustifyH("CENTER")
     timer:SetShadowOffset(1, -1)
     timer:Hide()
     btn.timer = timer
     btn._lastTimerText = ""
 
-    local ok, cd = pcall(CreateFrame, "Cooldown", nil, btn, "CooldownFrameTemplate")
-    if ok and cd then
-        cd:SetAllPoints(btn)
-        cd:SetFrameLevel(btn:GetFrameLevel() + 1)
-        -- Keep swipe under the timer text.
-        if cd.SetDrawEdge then
-            cd:SetDrawEdge(false)
-        end
-        btn.cd = cd
-    end
-
     btn:SetScript("OnEnter", function(self)
-        if not self.auraIndex or not self.filter then
+        if not self.auraIndex then
             return
         end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        if self.filter == "HARMFUL" then
-            GameTooltip:SetUnitDebuff(host.unit, self.auraIndex)
-        else
-            GameTooltip:SetUnitBuff(host.unit, self.auraIndex)
-        end
+        GameTooltip:SetUnitBuff(host.unit, self.auraIndex)
     end)
     btn:SetScript("OnLeave", GameTooltip_Hide)
 
@@ -226,9 +190,6 @@ local function HideIconFrom(host, fromIndex)
                 btn.timer:SetText("")
                 btn.timer:Hide()
             end
-            if btn.cd then
-                btn.cd:Hide()
-            end
         end
     end
 end
@@ -238,18 +199,17 @@ local function PaintIcon(btn, size, entry, showTimers)
     btn:SetHeight(size)
     btn.icon:SetTexture(entry.texture)
     btn.auraIndex = entry.index
-    btn.filter = entry.filter
+    btn.filter = "HELPFUL"
     btn.expiration = entry.expiration
     btn.duration = entry.duration
 
-    local fontSize = floor(size * 0.55 + 0.5)
-    if fontSize < 8 then fontSize = 8 end
-    if fontSize > 14 then fontSize = 14 end
     if btn.timer then
-        btn.timer:SetFont("Fonts\\FRIZQT__.TTF", fontSize, "OUTLINE")
+        btn.timer:ClearAllPoints()
+        btn.timer:SetPoint("TOP", btn, "BOTTOM", 0, -1)
+        btn.timer:SetFont("Fonts\\FRIZQT__.TTF", TIMER_FONT_SIZE, "OUTLINE")
     end
     if btn.count then
-        btn.count:SetFont("Fonts\\FRIZQT__.TTF", math.max(8, fontSize - 1), "OUTLINE")
+        btn.count:SetFont("Fonts\\FRIZQT__.TTF", math.max(8, TIMER_FONT_SIZE - 1), "OUTLINE")
     end
 
     if entry.count and entry.count > 1 then
@@ -260,24 +220,16 @@ local function PaintIcon(btn, size, entry, showTimers)
         btn.count:Hide()
     end
 
-    if entry.isDebuff then
-        local r, g, b = GetDebuffBorderColor(entry.debuffType)
-        btn.border:SetVertexColor(r, g, b)
-        btn.border:Show()
-    else
+    if btn.border then
         btn.border:Hide()
     end
 
-    local hasDuration = entry.duration and entry.duration > 0 and entry.expiration and entry.expiration > 0
+    -- No cooldown swipe; duration is shown as text below the icon only.
     if btn.cd then
-        if hasDuration then
-            btn.cd:SetCooldown(entry.expiration - entry.duration, entry.duration)
-            btn.cd:Show()
-        else
-            btn.cd:Hide()
-        end
+        btn.cd:Hide()
     end
 
+    local hasDuration = entry.duration and entry.duration > 0 and entry.expiration and entry.expiration > 0
     if showTimers and hasDuration then
         UpdateIconTimer(btn, GetTime())
     elseif btn.timer then
@@ -290,173 +242,29 @@ local function PaintIcon(btn, size, entry, showTimers)
     btn:Show()
 end
 
-local function EnsureBuffNameLookup()
-    if buffByName then
-        return
-    end
-    buffByName = {}
-    local lookup = addon.data and addon.data.partyAuraBuffById
-    if not lookup then
-        return
-    end
-    for spellId, meta in pairs(lookup) do
-        local name = GetSpellInfo(spellId)
-        if name then
-            local key = strlower(name)
-            local prev = buffByName[key]
-            if not prev or meta.priority > prev.priority then
-                buffByName[key] = { group = meta.group, priority = meta.priority }
-            end
-        end
-    end
-end
-
-local function CollectBuffs(unit, cfg, out)
-    wipe(scratchBuffBest)
-    -- nil means default-on (existing profiles may only have { enabled = true }).
-    if cfg.showClassBuffs == false then
-        return out
-    end
-    local lookup = addon.data and addon.data.partyAuraBuffById
-    if not lookup then
-        return out
-    end
-    EnsureBuffNameLookup()
-
+-- All helpful auras in UnitBuff order (buffkeyword wrap already filters junk on party).
+local function CollectBuffs(unit, maxBuffs, out)
+    wipe(scratchBuffs)
     local i = 1
-    while true do
-        local name, _, texture, count, _, duration, expiration, _, _, _, spellId = UnitBuff(unit, i)
+    while #scratchBuffs < maxBuffs do
+        local name, _, texture, count, _, duration, expiration = UnitBuff(unit, i)
         if not name then
             break
         end
-        local meta = (spellId and lookup[spellId]) or nil
-        if not meta and buffByName and name then
-            meta = buffByName[strlower(name)]
-        end
-        if meta then
-            local prev = scratchBuffBest[meta.group]
-            if not prev or meta.priority > prev.priority then
-                scratchBuffBest[meta.group] = {
-                    priority = meta.priority,
-                    texture = texture,
-                    count = count,
-                    duration = duration,
-                    expiration = expiration,
-                    index = i,
-                    filter = "HELPFUL",
-                    isDebuff = false,
-                    group = meta.group,
-                }
-            end
-        end
+        scratchBuffs[#scratchBuffs + 1] = {
+            texture = texture,
+            count = count,
+            duration = duration,
+            expiration = expiration,
+            index = i,
+        }
         i = i + 1
         if i > 40 then
             break
         end
     end
-
-    for _, entry in pairs(scratchBuffBest) do
-        out[#out + 1] = entry
-    end
-    table.sort(out, function(a, b)
-        return (a.priority or 0) > (b.priority or 0)
-    end)
-    return out
-end
-
-local function CanDispel(debuffType, cfg)
-    if not debuffType or debuffType == "" then
-        return false
-    end
-    if cfg.showAllDispellable then
-        return debuffType == "Magic"
-            or debuffType == "Curse"
-            or debuffType == "Disease"
-            or debuffType == "Poison"
-    end
-    return playerDispel and playerDispel[debuffType] and true or false
-end
-
-local function EnsureImportantNameLookup()
-    if importantByName then
-        return
-    end
-    importantByName = {}
-    local important = addon.data and addon.data.partyAuraImportantDebuffs
-    if not important then
-        return
-    end
-    for spellId, pri in pairs(important) do
-        local name = GetSpellInfo(spellId)
-        if name then
-            local key = strlower(name)
-            local prev = importantByName[key]
-            if not prev or pri > prev then
-                importantByName[key] = pri
-            end
-        end
-    end
-end
-
-local function CollectDebuffs(unit, cfg, out)
-    wipe(scratchDebuffs)
-    wipe(scratchSeen)
-    local showDispellable = cfg.showDispellable ~= false
-    local showImportant = cfg.showImportantDebuffs ~= false
-    if not showDispellable and not showImportant then
-        return out
-    end
-
-    local important = addon.data and addon.data.partyAuraImportantDebuffs
-    if showImportant then
-        EnsureImportantNameLookup()
-    end
-    local i = 1
-    while true do
-        local name, _, texture, count, debuffType, duration, expiration, _, _, _, spellId = UnitDebuff(unit, i)
-        if not name then
-            break
-        end
-
-        local impPri = spellId and important and important[spellId]
-        if not impPri and importantByName then
-            impPri = importantByName[strlower(name)]
-        end
-        local isImportant = showImportant and impPri ~= nil
-        local isDispellable = showDispellable and CanDispel(debuffType, cfg)
-
-        if isImportant or isDispellable then
-            local key = spellId or (name .. tostring(i))
-            if not scratchSeen[key] then
-                scratchSeen[key] = true
-                scratchDebuffs[#scratchDebuffs + 1] = {
-                    texture = texture,
-                    count = count,
-                    duration = duration,
-                    expiration = expiration,
-                    index = i,
-                    filter = "HARMFUL",
-                    isDebuff = true,
-                    debuffType = debuffType,
-                    priority = isImportant and (impPri or 1) or 0,
-                }
-            end
-        end
-        i = i + 1
-        if i > 40 then
-            break
-        end
-    end
-
-    table.sort(scratchDebuffs, function(a, b)
-        if a.priority ~= b.priority then
-            return a.priority > b.priority
-        end
-        return (a.index or 0) < (b.index or 0)
-    end)
-
-    for n = 1, #scratchDebuffs do
-        out[#out + 1] = scratchDebuffs[n]
+    for n = 1, #scratchBuffs do
+        out[#out + 1] = scratchBuffs[n]
     end
     return out
 end
@@ -491,6 +299,37 @@ local function LayoutRow(host, entries, startIconIndex, size, spacing, growLeft,
     return used, x > 0 and (x - spacing) or 0
 end
 
+local function SuppressNativeBuffButton(btn)
+    if not btn then
+        return
+    end
+    if not nativeBuffHooked[btn] then
+        hooksecurefunc(btn, "Show", function(self)
+            if nativeBuffSuppress then
+                self:Hide()
+            end
+        end)
+        nativeBuffHooked[btn] = true
+    end
+    btn:Hide()
+end
+
+local function ApplyNativeBuffSuppress()
+    for i = 1, MAX_PARTY do
+        for auraIndex = 1, MAX_NATIVE_BUFFS do
+            SuppressNativeBuffButton(_G["PartyMemberFrame" .. i .. "Buff" .. auraIndex])
+        end
+    end
+end
+
+local function SetNativeBuffSuppress(enabled)
+    nativeBuffSuppress = enabled and true or false
+    if nativeBuffSuppress then
+        ApplyNativeBuffSuppress()
+    end
+    -- When disabled, leave icons alone; Blizzard/DragonUI will Show them on the next aura update.
+end
+
 RefreshHost = function(index)
     local host = hosts[index]
     if not host then
@@ -501,6 +340,10 @@ RefreshHost = function(index)
     local cfg = Cfg()
     if not cfg or not parent then
         return
+    end
+
+    if nativeBuffSuppress then
+        ApplyNativeBuffSuppress()
     end
 
     if not UnitExists(unit) or not parent:IsShown() then
@@ -515,29 +358,22 @@ RefreshHost = function(index)
     if size > 32 then size = 32 end
     local spacing = cfg.spacing or 1
     if spacing < 0 then spacing = 0 end
-    local maxBuffs = cfg.maxBuffs or 6
-    local maxDebuffs = cfg.maxDebuffs or 4
+    local maxBuffs = cfg.maxBuffs or 8
+    if maxBuffs < 1 then maxBuffs = 1 end
+    if maxBuffs > POOL_SIZE then maxBuffs = POOL_SIZE end
     local anchor = cfg.anchor or "LEFT"
     local growLeft = (anchor == "LEFT")
     local showTimers = cfg.showTimers ~= false
 
     PlaceHost(host, parent, anchor)
 
-    local buffs, debuffs = {}, {}
-    CollectBuffs(unit, cfg, buffs)
-    CollectDebuffs(unit, cfg, debuffs)
-
-    while #buffs > maxBuffs do
-        buffs[#buffs] = nil
-    end
-    while #debuffs > maxDebuffs do
-        debuffs[#debuffs] = nil
-    end
+    local buffs = {}
+    CollectBuffs(unit, maxBuffs, buffs)
 
     local iconIndex = 1
-    local buffW, debuffW = 0, 0
+    local buffW = 0
     local rowH = size
-    local gap = 2
+    local timerPad = showTimers and TIMER_BELOW_PAD or 0
     local needsTimer = false
 
     if #buffs > 0 then
@@ -554,36 +390,12 @@ RefreshHost = function(index)
         end
     end
 
-    local debuffY = (#buffs > 0) and -(size + gap) or 0
-    if #debuffs > 0 then
-        local used, width = LayoutRow(host, debuffs, iconIndex, size, spacing, growLeft, debuffY, showTimers)
-        iconIndex = iconIndex + used
-        debuffW = width
-        if showTimers and not needsTimer then
-            for n = 1, #debuffs do
-                if debuffs[n].duration and debuffs[n].duration > 0 then
-                    needsTimer = true
-                    break
-                end
-            end
-        end
-    end
-
     HideIconFrom(host, iconIndex)
 
     local width = buffW
-    if debuffW > width then
-        width = debuffW
-    end
     local height = 0
     if #buffs > 0 then
-        height = height + rowH
-    end
-    if #debuffs > 0 then
-        if height > 0 then
-            height = height + gap
-        end
-        height = height + rowH
+        height = rowH + timerPad
     end
 
     if width < 1 then
@@ -596,7 +408,7 @@ RefreshHost = function(index)
     host:SetHeight(height)
     host.partyIndex = index
 
-    if #buffs > 0 or #debuffs > 0 then
+    if #buffs > 0 then
         host:Show()
         if needsTimer then
             host._timerElapsed = 0
@@ -631,7 +443,7 @@ local function EnsureHosts()
             host.parentFrame = parent
             host.icons = {}
             host:Hide()
-            for n = 1, math.min(POOL_SIZE, 6) do
+            for n = 1, math.min(POOL_SIZE, 8) do
                 AcquireIcon(host, n)
             end
             hosts[i] = host
@@ -684,26 +496,22 @@ local function OnEvent(self, event, arg1)
         or event == "PARTY_MEMBER_DISABLE"
         or event == "RAID_ROSTER_UPDATE"
     then
-        RefreshPlayerDispel()
         EnsureHosts()
+        if nativeBuffSuppress then
+            ApplyNativeBuffSuppress()
+        end
         RefreshAll()
         return
     end
 end
 
 local function RequestRefreshAll()
-    if InCombatLockdown and InCombatLockdown() then
-        -- Icon paint is safe; re-anchor may still run on non-protected frames.
-        -- Prefer full refresh; host is not protected.
-        RefreshAll()
-        return
-    end
     RefreshAll()
 end
 
 local function OnEnable()
-    RefreshPlayerDispel()
     EnsureHosts()
+    SetNativeBuffSuppress(true)
     if not eventFrame then
         eventFrame = CreateFrame("Frame")
     end
@@ -723,6 +531,9 @@ local function OnEnable()
             local id = frame:GetID()
             if id and id >= 1 and id <= MAX_PARTY then
                 EnsureHosts()
+                if nativeBuffSuppress then
+                    ApplyNativeBuffSuppress()
+                end
                 if hosts[id] then
                     RefreshHost(id)
                 end
@@ -735,18 +546,29 @@ local function OnEnable()
     if addon.core and addon.core.ScheduleTimer then
         addon.core:ScheduleTimer(function()
             EnsureHosts()
+            SetNativeBuffSuppress(true)
             RefreshAll()
         end, 0.5)
     end
 end
 
 local function OnDisable()
+    SetNativeBuffSuppress(false)
     if eventFrame then
         eventFrame:UnregisterAllEvents()
         eventFrame:SetScript("OnEvent", nil)
     end
     DestroyHosts()
     pendingLayout = false
+    -- Nudge Blizzard to re-show native buffs if units still exist.
+    if type(PartyMemberFrame_UpdateMember) == "function" then
+        for i = 1, MAX_PARTY do
+            local frame = _G["PartyMemberFrame" .. i]
+            if frame and UnitExists("party" .. i) then
+                PartyMemberFrame_UpdateMember(frame)
+            end
+        end
+    end
 end
 
 addon:RegisterFeature(KEY, {
@@ -756,12 +578,12 @@ addon:RegisterFeature(KEY, {
         return L["Party Auras"]
     end,
     desc = function()
-        return L["Show important class buffs and dispellable/important debuffs on party frames."]
+        return L["Show all party member buffs on the party frames. Hides the default party buff icons. Debuffs stay on the Blizzard/DragonUI frames."]
     end,
     OnEnable = OnEnable,
     OnDisable = OnDisable,
     BuildOptions = function(section, C)
-        C:AddDescription(section, L["Icons appear only when present. Default anchor is left of the party frame."])
+        C:AddDescription(section, L["Shows every helpful aura (junk keywords still filtered). Default anchor is left of the party frame; native buff icons are hidden while enabled."])
 
         C:AddDropdown(section, {
             label = L["Aura Anchor"],
@@ -814,84 +636,21 @@ addon:RegisterFeature(KEY, {
         C:AddSlider(section, {
             label = L["Max Buff Icons"],
             getFunc = function()
-                return (Cfg() and Cfg().maxBuffs) or 6
+                return (Cfg() and Cfg().maxBuffs) or 8
             end,
             setFunc = function(val)
                 Cfg().maxBuffs = val
             end,
             min = 1,
-            max = 8,
+            max = 12,
             step = 1,
             width = 200,
-            callback = RequestRefreshAll,
-        })
-
-        C:AddSlider(section, {
-            label = L["Max Debuff Icons"],
-            getFunc = function()
-                return (Cfg() and Cfg().maxDebuffs) or 4
-            end,
-            setFunc = function(val)
-                Cfg().maxDebuffs = val
-            end,
-            min = 1,
-            max = 8,
-            step = 1,
-            width = 200,
-            callback = RequestRefreshAll,
-        })
-
-        C:AddToggle(section, {
-            label = L["Show Class Buffs"],
-            desc = L["Fortitude, Mark of the Wild, Thorns, Kings, Might, Intellect, Spirit (and greater/group versions)."],
-            getFunc = function()
-                return Cfg().showClassBuffs ~= false
-            end,
-            setFunc = function(val)
-                Cfg().showClassBuffs = val
-            end,
-            callback = RequestRefreshAll,
-        })
-
-        C:AddToggle(section, {
-            label = L["Show Dispellable Debuffs"],
-            desc = L["Show debuffs your class can dispel (by default)."],
-            getFunc = function()
-                return Cfg().showDispellable ~= false
-            end,
-            setFunc = function(val)
-                Cfg().showDispellable = val
-            end,
-            callback = RequestRefreshAll,
-        })
-
-        C:AddToggle(section, {
-            label = L["Show All Dispellable Types"],
-            desc = L["Show Magic/Curse/Disease/Poison even if you cannot dispel them."],
-            getFunc = function()
-                return Cfg().showAllDispellable == true
-            end,
-            setFunc = function(val)
-                Cfg().showAllDispellable = val
-            end,
-            callback = RequestRefreshAll,
-        })
-
-        C:AddToggle(section, {
-            label = L["Show Important Debuffs"],
-            desc = L["Boss/callout debuffs from the built-in priority list."],
-            getFunc = function()
-                return Cfg().showImportantDebuffs ~= false
-            end,
-            setFunc = function(val)
-                Cfg().showImportantDebuffs = val
-            end,
             callback = RequestRefreshAll,
         })
 
         C:AddToggle(section, {
             label = L["Show Aura Timers"],
-            desc = L["Show remaining time on icons as 5m / 12s. Hidden for permanent auras."],
+            desc = L["Show remaining time below icons as 5m / 12s. Hidden for permanent auras."],
             getFunc = function()
                 return Cfg().showTimers ~= false
             end,

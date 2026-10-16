@@ -22,12 +22,7 @@ addon.defaults = {
                 anchor = "LEFT",
                 size = 18,
                 spacing = 1,
-                maxBuffs = 6,
-                maxDebuffs = 4,
-                showClassBuffs = true,
-                showDispellable = true,
-                showImportantDebuffs = true,
-                showAllDispellable = false,
+                maxBuffs = 8,
                 showTimers = true,
             },
             chatFilter = {
