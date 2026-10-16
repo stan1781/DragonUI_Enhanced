@@ -9,7 +9,7 @@ local L = addon.L
 local KEY = "targetDebuffTop"
 local MAX_DEBUFFS = 16
 local GAP = 2
-local TOP_PAD = 4
+local TOP_PAD = 20
 local MAX_DURATION = 5 * 60
 
 local active = false
