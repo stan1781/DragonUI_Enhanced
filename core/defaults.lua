@@ -16,7 +16,6 @@ addon.defaults = {
             motionSpeed = {
                 enabled = true,
                 fontSize = 11,
-                scale = 1,
                 anchor = "CENTER",
                 posX = 0,
                 posY = 120,

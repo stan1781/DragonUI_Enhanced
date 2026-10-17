@@ -53,10 +53,6 @@ end
 local function ApplyStyle()
     if not frame then return end
     local cfg = Cfg()
-    local scale = cfg.scale or 1
-    if scale < 0.5 then scale = 0.5 end
-    if scale > 2 then scale = 2 end
-    frame:SetScale(scale)
     local size = cfg.fontSize or 11
     if size < 8 then size = 8 end
     if size > 24 then size = 24 end
@@ -225,19 +221,6 @@ addon:RegisterFeature(KEY, {
             end,
             setFunc = function(val)
                 Cfg().fontSize = val
-                ApplyStyle()
-            end,
-        })
-        C:AddSlider(section, {
-            label = L["Scale"],
-            min = 0.5,
-            max = 2,
-            step = 0.05,
-            getFunc = function()
-                return (Cfg().scale) or 1
-            end,
-            setFunc = function(val)
-                Cfg().scale = val
                 ApplyStyle()
             end,
         })
