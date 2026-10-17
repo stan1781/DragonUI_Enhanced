@@ -72,17 +72,16 @@ addon.defaults = {
             },
             chatEnhance = {
                 enabled = true,
-                shortChannel = true,
                 timestamp = true,
                 tabSwitch = true,
-                dice = true,
                 editHistory = true,
                 editHistorySize = 20,
                 -- worldChannelKeywords = nil → defaults
             },
+            -- Linked to chatEnhance (no separate enable / options section).
             chatBar = {
                 enabled = true,
-                scale = 1,
+                fontSize = 15,
                 -- 默认贴在 ChatFrame1 上方；拖动后改为 UIParent 绝对坐标
                 anchorToChat = true,
                 chatOffsetX = 0,

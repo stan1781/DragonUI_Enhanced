@@ -63,7 +63,7 @@ function addon:GetFeaturesByCategory(category)
     local list = {}
     for i = 1, #featureOrder do
         local def = features[featureOrder[i]]
-        if def and def.category == category then
+        if def and def.category == category and not def.optionsHidden then
             list[#list + 1] = def
         end
     end
@@ -162,7 +162,11 @@ end
 function addon:ApplyAllFeatures()
     for i = 1, #featureOrder do
         local key = featureOrder[i]
-        if self:IsFeatureEnabled(key) then
+        local def = features[key]
+        -- Child features are started/stopped by their parent (e.g. chatBar ← chatEnhance).
+        if def and def.linkedTo then
+            -- no independent apply
+        elseif self:IsFeatureEnabled(key) then
             self:StartFeature(key)
         else
             self:StopFeature(key)

@@ -97,6 +97,8 @@ L["Colored channel buttons: Say/Yell/Party/Guild/Raid/BG/1-3/LFG/Emote/Roll. Dra
 L["Left-click opens that channel. Right-click「组」joins/leaves the LFG channel."] = "左键打开对应频道；右键「组」加入/离开寻求组队频道。"
 L["LFG Channel Name"] = "组队频道名"
 L["Channel toggled by the「组」button (right-click). Default: 寻求组队."] = "「组」按钮右键切换的频道名。默认：寻求组队。"
+L["Button Text Size"] = "按钮文字大小"
+L["Font size of the quick chat bar labels (说/会/组…)."] = "快捷栏按钮文字（说/会/组…）的字号。"
 L["Default position: above ChatFrame1. Drag to move; reset in DragonUI editor restores chat-top anchor."] = "默认贴在主聊天框上方。拖动可改位置；重置会重新贴到聊天框顶。"
 L["Reset to Above Chat"] = "重置到聊天框上方"
 
@@ -192,7 +194,7 @@ L["SecondaryHandSlot"] = "副手"
 L["RangedSlot"] = "远程"
 
 L["Chat Enhance"] = "聊天增强"
-L["Channel shorten, timestamps, Tab channel cycle, edit history, and /duieroll dice."] = "频道缩写、时间戳、Tab 切频道、输入历史，以及 /duieroll 骰子。"
+L["Channel shorten, quick chat bar, timestamps, Tab channel cycle, edit history, and /duieroll."] = "频道缩写、快捷聊天栏、时间戳、Tab 切频道、输入历史，以及 /duieroll。"
 L["Shorten Channel Names"] = "精简频道名"
 L["Show abbreviated public channel tags like [1综合]."] = "公共频道标签缩写，例如 [1综合]。"
 L["Chat Timestamps"] = "聊天时间戳"

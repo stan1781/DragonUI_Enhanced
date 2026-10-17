@@ -175,10 +175,8 @@ local function ProcessMessage(text)
     if type(text) ~= "string" then
         text = tostring(text)
     end
-    if cfg.shortChannel ~= false then
-        text = ShortenChannels(text)
-    end
-    if cfg.timestamp then
+    text = ShortenChannels(text)
+    if cfg and cfg.timestamp then
         text = format(TS, date("%H:%M:%S"), text)
     end
     return text
@@ -444,14 +442,14 @@ local function RegisterDiceSlash()
     if slashRegistered then return end
     if addon.core and addon.core.RegisterChatCommand then
         addon.core:RegisterChatCommand("duieroll", function()
-            if active and Cfg().dice ~= false then
+            if active then
                 RandomRoll(1, 100)
             end
         end)
     else
         SLASH_DUIEROLL1 = "/duieroll"
         SlashCmdList.DUIEROLL = function()
-            if active and Cfg().dice ~= false then
+            if active then
                 RandomRoll(1, 100)
             end
         end
@@ -588,18 +586,18 @@ end
 local function OnEnable()
     active = true
     WrapAllChatFrames()
-    if Cfg().shortChannel ~= false then
-        ApplyChatTags()
-    end
+    ApplyChatTags()
     InstallTabHandler()
     RegisterDiceSlash()
     InstallEditHistory()
     RefreshAddMessageState()
+    addon:StartFeature("chatBar")
 end
 
 local function OnDisable()
     active = false
     RestoreChatTags()
+    addon:StopFeature("chatBar")
     -- AddMessage / Tab / history wrappers stay for safety (requiresReload recommended for full undo)
 end
 
@@ -609,20 +607,14 @@ addon:RegisterFeature(KEY, {
     requiresReload = true,
     label = function() return L["Chat Enhance"] end,
     desc = function()
-        return L["Channel shorten, timestamps, Tab channel cycle, edit history, and /duieroll dice."]
+        return L["Channel shorten, quick chat bar, timestamps, Tab channel cycle, edit history, and /duieroll."]
     end,
     OnEnable = OnEnable,
     OnDisable = OnDisable,
     BuildOptions = function(section, C)
-        C:AddToggle(section, {
-            label = L["Shorten Channel Names"],
-            desc = L["Show abbreviated public channel tags like [1综合]."],
-            getFunc = function() return Cfg().shortChannel ~= false end,
-            setFunc = function(val)
-                Cfg().shortChannel = val and true or false
-                if val then ApplyChatTags() else RestoreChatTags() end
-            end,
-        })
+        if type(addon.BuildChatBarOptions) == "function" then
+            addon.BuildChatBarOptions(section, C)
+        end
         C:AddToggle(section, {
             label = L["Chat Timestamps"],
             desc = L["Prefix chat lines with HH:MM:SS in cyan."],
@@ -639,12 +631,26 @@ addon:RegisterFeature(KEY, {
                 Cfg().tabSwitch = val and true or false
             end,
         })
-        C:AddToggle(section, {
-            label = L["Dice (/duieroll)"],
-            desc = L["Enable /duieroll to roll 1-100."],
-            getFunc = function() return Cfg().dice ~= false end,
+        C:AddEditBox(section, {
+            label = L["World Channel Keywords"],
+            desc = L["Comma-separated names matched for Tab world-channel step. Default: 大脚世界频道, 世界频道, 寻求组队."],
+            getFunc = function()
+                local list = Cfg().worldChannelKeywords
+                if type(list) ~= "table" or #list == 0 then
+                    return "大脚世界频道, 世界频道, 寻求组队"
+                end
+                return table.concat(list, ", ")
+            end,
             setFunc = function(val)
-                Cfg().dice = val and true or false
+                local list = {}
+                val = gsub(val or "", "[,;，；]+", "\n")
+                for line in string.gmatch(val .. "\n", "([^\n]*)\n") do
+                    line = strtrim and strtrim(line) or line:match("^%s*(.-)%s*$")
+                    if line and line ~= "" then
+                        list[#list + 1] = line
+                    end
+                end
+                Cfg().worldChannelKeywords = (#list > 0) and list or nil
             end,
         })
         C:AddToggle(section, {
@@ -681,28 +687,6 @@ addon:RegisterFeature(KEY, {
                 ClearEditHistory()
             end,
             disabled = function() return Cfg().editHistory == false end,
-        })
-        C:AddEditBox(section, {
-            label = L["World Channel Keywords"],
-            desc = L["Comma-separated names matched for Tab world-channel step. Default: 大脚世界频道, 世界频道, 寻求组队."],
-            getFunc = function()
-                local list = Cfg().worldChannelKeywords
-                if type(list) ~= "table" or #list == 0 then
-                    return "大脚世界频道, 世界频道, 寻求组队"
-                end
-                return table.concat(list, ", ")
-            end,
-            setFunc = function(val)
-                local list = {}
-                val = gsub(val or "", "[,;，；]+", "\n")
-                for line in string.gmatch(val .. "\n", "([^\n]*)\n") do
-                    line = strtrim and strtrim(line) or line:match("^%s*(.-)%s*$")
-                    if line and line ~= "" then
-                        list[#list + 1] = line
-                    end
-                end
-                Cfg().worldChannelKeywords = (#list > 0) and list or nil
-            end,
         })
     end,
 })

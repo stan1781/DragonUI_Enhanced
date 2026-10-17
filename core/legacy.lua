@@ -12,7 +12,7 @@ local LEGACY = {
     },
     {
         name = "ChatBar",
-        features = "chatEnhance / chatBar",
+        features = "chatEnhance",
         noteKey = "legacy_ChatBar",
     },
     {

@@ -7,7 +7,7 @@ local L = addon.L
 local KEY = "chatBar"
 local BUTTON_SIZE = 23
 local BUTTON_GAP = 6
-local FONT_SIZE = 15
+local DEFAULT_FONT_SIZE = 15
 
 local barFrame
 local buttons = {}
@@ -16,6 +16,27 @@ local active = false
 
 local function Cfg()
     return addon:GetFeatureConfig(KEY)
+end
+
+local function FontSize()
+    local cfg = Cfg()
+    local size = cfg and tonumber(cfg.fontSize) or DEFAULT_FONT_SIZE
+    if size < 10 then
+        size = 10
+    elseif size > 24 then
+        size = 24
+    end
+    return size
+end
+
+local function ApplyFontSize()
+    local size = FontSize()
+    for i = 1, #buttons do
+        local btn = buttons[i]
+        if btn and btn.text then
+            btn.text:SetFont(STANDARD_TEXT_FONT, size, "OUTLINE")
+        end
+    end
 end
 
 local function SelectedChatFrame()
@@ -102,8 +123,7 @@ local function ApplyPosition()
     if not barFrame then return end
     local cfg = Cfg()
     local defaults = addon.defaults.profile.features.chatBar
-    local scale = cfg.scale or defaults.scale or 1
-    barFrame:SetScale(scale)
+    barFrame:SetScale(1)
     barFrame:ClearAllPoints()
 
     if cfg.anchorToChat ~= false then
@@ -138,7 +158,6 @@ local function ResetPosition()
     cfg.anchor = d.anchor
     cfg.posX = d.posX
     cfg.posY = d.posY
-    cfg.scale = d.scale
     ApplyPosition()
 end
 
@@ -169,7 +188,7 @@ local function CreateButton(parent, def, index)
     btn:SetScript("OnDragStop", StopBarDrag)
 
     local fs = btn:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(STANDARD_TEXT_FONT, FONT_SIZE, "OUTLINE")
+    fs:SetFont(STANDARD_TEXT_FONT, FontSize(), "OUTLINE")
     fs:SetShadowOffset(0.8, -0.8)
     fs:SetShadowColor(0.3, 0.3, 0.3, 0.7)
     fs:SetJustifyH("CENTER")
@@ -227,7 +246,7 @@ local function RegisterEditor()
         name = "enhancedChatBar",
         frame = barFrame,
         editorVisible = function()
-            return addon:IsFeatureEnabled(KEY)
+            return addon:IsFeatureEnabled("chatEnhance")
         end,
         applyPosition = ApplyPosition,
         resetPosition = ResetPosition,
@@ -249,7 +268,7 @@ local function RegisterEditor()
             if barFrame then barFrame:Show() end
         end,
         hideTest = function()
-            if barFrame and addon:IsFeatureEnabled(KEY) then
+            if barFrame and addon:IsFeatureEnabled("chatEnhance") then
                 -- keep visible
             elseif barFrame then
                 barFrame:Hide()
@@ -265,6 +284,7 @@ local function OnEnable()
     EnsureBar()
     RegisterEditor()
     ApplyPosition()
+    ApplyFontSize()
     barFrame:Show()
     if addon.ChatEmote then
         addon.ChatEmote:InstallFilters()
@@ -281,52 +301,59 @@ local function OnDisable()
     end
 end
 
+-- Options are shown under chatEnhance (single enable for enhance + bar).
+function addon.BuildChatBarOptions(section, C)
+    C:AddDescription(section, L["Colored channel buttons: Say/Yell/Party/Guild/Raid/BG/1-3/LFG/Emote/Roll. Drag to move; use DragonUI editor for precise placement."])
+    C:AddDescription(section, L["Left-click opens that channel. Right-click「组」joins/leaves the LFG channel."])
+    C:AddDescription(section, L["Default position: above ChatFrame1. Drag to move; reset in DragonUI editor restores chat-top anchor."])
+    C:AddButton(section, {
+        label = L["Reset to Above Chat"],
+        callback = function()
+            ResetPosition()
+        end,
+    })
+    C:AddEditBox(section, {
+        label = L["LFG Channel Name"],
+        desc = L["Channel toggled by the「组」button (right-click). Default: 寻求组队."],
+        getFunc = function()
+            return Cfg().lfgChannelName or "寻求组队"
+        end,
+        setFunc = function(val)
+            val = tostring(val or ""):match("^%s*(.-)%s*$") or ""
+            Cfg().lfgChannelName = (val ~= "") and val or nil
+        end,
+    })
+    C:AddSlider(section, {
+        label = L["Button Text Size"],
+        desc = L["Font size of the quick chat bar labels (说/会/组…)."],
+        min = 10,
+        max = 24,
+        step = 1,
+        getFunc = function()
+            return FontSize()
+        end,
+        setFunc = function(val)
+            Cfg().fontSize = math.floor(val + 0.5)
+            ApplyFontSize()
+        end,
+    })
+end
+
 addon:RegisterFeature(KEY, {
     category = "chat",
     default = true,
+    linkedTo = "chatEnhance",
+    optionsHidden = true,
     label = function() return L["Quick Chat Bar"] end,
     desc = function()
         return L["Colored channel buttons: Say/Yell/Party/Guild/Raid/BG/1-3/LFG/Emote/Roll. Drag to move; use DragonUI editor for precise placement."]
     end,
     OnEnable = OnEnable,
     OnDisable = OnDisable,
-    BuildOptions = function(section, C)
-        C:AddDescription(section, L["Left-click opens that channel. Right-click「组」joins/leaves the LFG channel."])
-        C:AddDescription(section, L["Default position: above ChatFrame1. Drag to move; reset in DragonUI editor restores chat-top anchor."])
-        C:AddButton(section, {
-            label = L["Reset to Above Chat"],
-            callback = function()
-                ResetPosition()
-            end,
-        })
-        C:AddEditBox(section, {
-            label = L["LFG Channel Name"],
-            desc = L["Channel toggled by the「组」button (right-click). Default: 寻求组队."],
-            getFunc = function()
-                return Cfg().lfgChannelName or "寻求组队"
-            end,
-            setFunc = function(val)
-                val = tostring(val or ""):match("^%s*(.-)%s*$") or ""
-                Cfg().lfgChannelName = (val ~= "") and val or nil
-            end,
-        })
-        C:AddSlider(section, {
-            label = L["Scale"],
-            min = 0.5,
-            max = 2,
-            step = 0.05,
-            getFunc = function()
-                return (Cfg().scale) or 1
-            end,
-            setFunc = function(val)
-                Cfg().scale = val
-                ApplyPosition()
-            end,
-        })
-    end,
     Refresh = function()
         if active then
             ApplyPosition()
+            ApplyFontSize()
         end
     end,
 })
