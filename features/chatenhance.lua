@@ -170,12 +170,28 @@ local function ShortenChannels(text)
     return text
 end
 
+-- QQ-group bridge posts into 寻求组队 as: [4组队] ： <QQ群> [name(id)]： msg
+-- Only rewrite when the body carries the <QQ群> marker; normal LFG chat is untouched.
+local function FormatQQGroupBridge(text)
+    if not find(text, "<QQ群>", 1, true) then
+        return text
+    end
+    -- After ShortenChannels: [4组队] / hyperlink variants → [QQ群]
+    text = gsub(text, "%|Hchannel:.-%|h%[%d+组队%]%|h", "[QQ群]")
+    text = gsub(text, "%[%d+组队%]", "[QQ群]")
+    text = gsub(text, "%|Hchannel:.-%|h%[%d+%. 寻求组队%]%|h", "[QQ群]")
+    text = gsub(text, "%[%d+%. 寻求组队%]", "[QQ群]")
+    text = gsub(text, "<QQ群>%s*", "")
+    return text
+end
+
 local function ProcessMessage(text)
     local cfg = Cfg()
     if type(text) ~= "string" then
         text = tostring(text)
     end
     text = ShortenChannels(text)
+    text = FormatQQGroupBridge(text)
     if cfg and cfg.timestamp then
         text = format(TS, date("%H:%M:%S"), text)
     end
