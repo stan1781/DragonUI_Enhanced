@@ -68,8 +68,6 @@ addon.defaults = {
             },
             chatFilter = {
                 enabled = true,
-                filterTelegramTip = true,
-                filterLFGGuilds = true,
                 autoWho = true,
             },
             chatEnhance = {

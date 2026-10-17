@@ -1,4 +1,4 @@
--- DragonUI_Enhanced — LFG bot / Telegram system tip chat filter.
+-- DragonUI_Enhanced — LFG bot chat filter.
 -- Ported from ElvUI_Enhanced SystemMessageFilter (logic only; storage → DragonUI_EnhancedDB).
 
 local ADDON_NAME, addon = ...
@@ -12,11 +12,6 @@ local ipairs = ipairs
 local pairs = pairs
 
 local KEY = "chatFilter"
-
-local filterPatterns = {
-    "小窍门：你可以关注官方Telegram频道",
-    "不在你的队伍中",
-}
 
 local blockedGuilds = {
     ["鲜血与荣耀"] = "Horde",
@@ -37,9 +32,7 @@ local staticBlockedPlayers
 local state = {
     guildCache = {},
     blockedPlayers = {},
-    systemFilterFunc = nil,
     channelFilterFunc = nil,
-    systemRegistered = false,
     channelRegistered = false,
     eventsRegistered = false,
     eventFrame = nil,
@@ -279,29 +272,8 @@ local function GetSenderGuild(sender)
     return nil
 end
 
-local function ParseSystemEvent(_, event, msg)
-    if event ~= "CHAT_MSG_SYSTEM" then
-        return false
-    end
-    local cfg = Cfg()
-    if cfg.filterTelegramTip == false then
-        return false
-    end
-    local cleanMsg = CleanColorCodes(msg)
-    for _, pattern in ipairs(filterPatterns) do
-        if find(cleanMsg, pattern, 1, true) then
-            return true
-        end
-    end
-    return false
-end
-
-local function ParseChannelEvent(_, event, msg, sender, _, channelString, _, _, _, _, channelName)
+local function ParseChannelEvent(_, event, msg, sender)
     if event ~= "CHAT_MSG_CHANNEL" then
-        return false
-    end
-    local cfg = Cfg()
-    if cfg.filterLFGGuilds == false then
         return false
     end
 
@@ -374,8 +346,7 @@ local function GetCurrentDate()
 end
 
 local function CheckAutoWho()
-    local cfg = Cfg()
-    if cfg.filterLFGGuilds == false or cfg.autoWho == false then
+    if Cfg().autoWho == false then
         return
     end
 
@@ -459,54 +430,22 @@ local function EnsureEventFrame()
 end
 
 local function UpdateFilters()
-    local cfg = Cfg()
-    local filterSystem = cfg.filterTelegramTip ~= false
-    local filterLFG = cfg.filterLFGGuilds ~= false
-
-    if not state.systemFilterFunc then
-        state.systemFilterFunc = function(chatFrame, event, msg, ...)
-            return ParseSystemEvent(chatFrame, event, msg, ...)
-        end
-    end
     if not state.channelFilterFunc then
         state.channelFilterFunc = function(chatFrame, event, msg, sender, ...)
             return ParseChannelEvent(chatFrame, event, msg, sender, ...)
         end
     end
 
-    if filterSystem then
-        if not state.systemRegistered then
-            ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", state.systemFilterFunc)
-            state.systemRegistered = true
-        end
-    elseif state.systemRegistered then
-        ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", state.systemFilterFunc)
-        state.systemRegistered = false
+    if not state.channelRegistered then
+        ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", state.channelFilterFunc)
+        state.channelRegistered = true
     end
-
-    if filterLFG then
-        if not state.channelRegistered then
-            ChatFrame_AddMessageEventFilter("CHAT_MSG_CHANNEL", state.channelFilterFunc)
-            state.channelRegistered = true
-        end
-        local f = EnsureEventFrame()
-        if not state.eventsRegistered then
-            f:RegisterEvent("WHO_LIST_UPDATE")
-            f:RegisterEvent("PLAYER_ENTERING_WORLD")
-            f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-            state.eventsRegistered = true
-        end
-    else
-        if state.channelRegistered then
-            ChatFrame_RemoveMessageEventFilter("CHAT_MSG_CHANNEL", state.channelFilterFunc)
-            state.channelRegistered = false
-        end
-        if state.eventsRegistered and state.eventFrame then
-            state.eventFrame:UnregisterEvent("WHO_LIST_UPDATE")
-            state.eventFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
-            state.eventFrame:UnregisterEvent("ZONE_CHANGED_NEW_AREA")
-            state.eventsRegistered = false
-        end
+    local f = EnsureEventFrame()
+    if not state.eventsRegistered then
+        f:RegisterEvent("WHO_LIST_UPDATE")
+        f:RegisterEvent("PLAYER_ENTERING_WORLD")
+        f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+        state.eventsRegistered = true
     end
 end
 
@@ -518,10 +457,6 @@ local function OnEnable()
 end
 
 local function OnDisable()
-    if state.systemRegistered and state.systemFilterFunc then
-        ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", state.systemFilterFunc)
-        state.systemRegistered = false
-    end
     if state.channelRegistered and state.channelFilterFunc then
         ChatFrame_RemoveMessageEventFilter("CHAT_MSG_CHANNEL", state.channelFilterFunc)
         state.channelRegistered = false
@@ -537,37 +472,11 @@ addon:RegisterFeature(KEY, {
     default = true,
     label = function() return L["LFG Bot Filter"] end,
     desc = function()
-        return L["Block bot guild chat, cached bot players, and Telegram system tips."]
+        return L["Block bot guild chat and known bot characters."]
     end,
     OnEnable = OnEnable,
     OnDisable = OnDisable,
     BuildOptions = function(section, C)
-        C:AddToggle(section, {
-            label = L["Filter Telegram Tips"],
-            desc = L["Hide system messages advertising the official Telegram channel."],
-            getFunc = function()
-                return Cfg().filterTelegramTip ~= false
-            end,
-            setFunc = function(val)
-                Cfg().filterTelegramTip = val and true or false
-                if addon:IsFeatureEnabled(KEY) then
-                    UpdateFilters()
-                end
-            end,
-        })
-        C:AddToggle(section, {
-            label = L["Filter Bot Guild Chat"],
-            desc = L["Hide channel messages from blocked bot guilds and known bot characters."],
-            getFunc = function()
-                return Cfg().filterLFGGuilds ~= false
-            end,
-            setFunc = function(val)
-                Cfg().filterLFGGuilds = val and true or false
-                if addon:IsFeatureEnabled(KEY) then
-                    UpdateFilters()
-                end
-            end,
-        })
         C:AddToggle(section, {
             label = L["Auto /who in Capitals"],
             desc = L["Once per day per capital, silently /who blocked guilds to grow the player list."],
@@ -576,6 +485,9 @@ addon:RegisterFeature(KEY, {
             end,
             setFunc = function(val)
                 Cfg().autoWho = val and true or false
+                if val and addon:IsFeatureEnabled(KEY) then
+                    CheckAutoWho()
+                end
             end,
         })
         C:AddDescription(section, format(L["Blocked players (static + dynamic): %d."], GetBlockedPlayerCount()))

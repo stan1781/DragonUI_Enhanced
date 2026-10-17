@@ -62,21 +62,6 @@ local function ResolveUnit(tt)
     end
 end
 
-local function AddTargetLine(tt, unit)
-    if unit == "player" then
-        return
-    end
-    local unitTarget = unit .. "target"
-    if not UnitExists(unitTarget) then
-        return
-    end
-    local colored = ColoredName(unitTarget)
-    if not colored then
-        return
-    end
-    tt:AddDoubleLine((TARGET or "Target") .. ":", colored, 1, 1, 1)
-end
-
 local function AddTargetedBy(tt, unit)
     local inRaid = GetNumRaidMembers and GetNumRaidMembers() > 0
     local total = inRaid and GetNumRaidMembers() or (GetNumPartyMembers and GetNumPartyMembers() or 0)
@@ -118,7 +103,6 @@ local function OnTooltipSetUnit(tt)
     if not unit then
         return
     end
-    AddTargetLine(tt, unit)
     AddTargetedBy(tt, unit)
 end
 
@@ -142,7 +126,7 @@ addon:RegisterFeature(KEY, {
         return L["Targeted By"]
     end,
     desc = function()
-        return L["On unit tooltips, list party and raid members who are targeting that unit. Also shows that unit's target."]
+        return L["On unit tooltips, list party and raid members who are targeting that unit."]
     end,
     OnEnable = OnEnable,
     OnDisable = OnDisable,

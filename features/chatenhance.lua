@@ -19,7 +19,8 @@ local KEY = "chatEnhance"
 local active = false
 local originals = {} -- ChatFrame AddMessage backups
 local prevTabHandler
-local tabInstalled = false
+local tabHandler
+local tabClaimFrame
 local tagsApplied = false
 local savedTags = {}
 local slashRegistered = false
@@ -147,7 +148,7 @@ local function WorldChannelKeywords()
     if type(list) == "table" and #list > 0 then
         return list
     end
-    return { "大脚世界频道", "世界频道" }
+    return { "大脚世界频道", "世界频道", "寻求组队" }
 end
 
 local function ChannelNameMatchesWorld(channelName)
@@ -261,11 +262,9 @@ local cycles = {
     {
         chatType = "CHANNEL",
         use = function(_, editbox, currChatType)
-            local currNum
+            local currNum = tonumber(editbox:GetAttribute("channelTarget")) or 0
             if currChatType ~= "CHANNEL" then
                 currNum = IsShiftKeyDown() and 21 or 0
-            else
-                currNum = editbox:GetAttribute("channelTarget")
             end
             local h, r, step = currNum + 1, 20, 1
             if IsShiftKeyDown() then
@@ -273,9 +272,25 @@ local cycles = {
             end
             for i = h, r, step do
                 local channelNum, channelName = GetChannelName(i)
-                if channelNum and channelNum > 0 and ChannelNameMatchesWorld(channelName) then
-                    editbox:SetAttribute("channelTarget", i)
+                if channelNum and channelNum > 0 and channelName and ChannelNameMatchesWorld(channelName) then
+                    editbox:SetAttribute("channelTarget", channelNum)
                     return true
+                end
+            end
+            -- Index scan can miss custom channels; resolve keywords by name (e.g. 寻求组队).
+            local keys = WorldChannelKeywords()
+            local kStart, kEnd, kStep = 1, #keys, 1
+            if IsShiftKeyDown() then
+                kStart, kEnd, kStep = #keys, 1, -1
+            end
+            for ki = kStart, kEnd, kStep do
+                local id = GetChannelName(keys[ki])
+                if id and id > 0 and id ~= currNum then
+                    local _, name = GetChannelName(id)
+                    if name and ChannelNameMatchesWorld(name) then
+                        editbox:SetAttribute("channelTarget", id)
+                        return true
+                    end
                 end
             end
         end,
@@ -286,18 +301,32 @@ local cycles = {
     },
 }
 
-local function TabPressedInner(self)
-    if strsub(tostring(self:GetText()), 1, 1) == "/" then
-        return
+-- Bare "/s" / "/g " left by chat-bar buttons still allow Tab; "/s hello" does not.
+local function ShouldDeferTabForSlash(text)
+    if strsub(text, 1, 1) ~= "/" then
+        return false
     end
-    local currChatType = self:GetAttribute("chatType")
+    local body = text:match("^/%S+%s*(.*)$")
+    return body ~= nil and body ~= ""
+end
+
+-- Returns true if Tab was handled (caller should not run Blizzard default).
+local function TabPressedInner(self)
+    if not self or not self.GetText then
+        return false
+    end
+    local text = tostring(self:GetText() or "")
+    if ShouldDeferTabForSlash(text) then
+        return false
+    end
+    local currChatType = self:GetAttribute("chatType") or "SAY"
     if IsControlKeyDown() then
         if currChatType == "WHISPER" or currChatType == "BN_WHISPER" then
             self:SetAttribute("chatType", chatTypeBeforeSwitch or "SAY")
             ChatEdit_UpdateHeader(self)
             chatTypeBeforeSwitch = currChatType
             tellTargetBeforeSwitch = self:GetAttribute("tellTarget")
-            return
+            return true
         else
             local newTarget, newTargetType
             if ChatEdit_GetNextTellTarget then
@@ -327,26 +356,88 @@ local function TabPressedInner(self)
                 if cycles[j].use(cycles[j], self, currChatType) then
                     self:SetAttribute("chatType", cycles[j].chatType)
                     ChatEdit_UpdateHeader(self)
-                    return
+                    return true
                 end
             end
+            return true
         end
+    end
+    return false
+end
+
+local function ResolveEditBox(editbox)
+    if editbox and editbox.GetAttribute then
+        return editbox
+    end
+    if ChatEdit_GetActiveWindow then
+        local activeEdit = ChatEdit_GetActiveWindow()
+        if activeEdit and activeEdit.GetAttribute then
+            return activeEdit
+        end
+    end
+    return _G.ChatFrameEditBox or _G.ChatFrame1EditBox
+end
+
+local function HookEditBoxTab(editbox)
+    if not editbox or editbox._duieTabHooked then
+        return
+    end
+    editbox._duieTabHooked = true
+    local orig = editbox:GetScript("OnTabPressed")
+    editbox:SetScript("OnTabPressed", function(self, ...)
+        local cfg = Cfg()
+        if active and cfg and cfg.tabSwitch ~= false then
+            if TabPressedInner(self) then
+                return
+            end
+        end
+        if type(orig) == "function" then
+            return orig(self, ...)
+        end
+    end)
+end
+
+local function HookAllChatEditBoxes()
+    HookEditBoxTab(_G.ChatFrameEditBox)
+    local n = NUM_CHAT_WINDOWS or 10
+    for i = 1, n do
+        HookEditBoxTab(_G["ChatFrame" .. i .. "EditBox"])
     end
 end
 
 local function InstallTabHandler()
-    if tabInstalled then return end
-    prevTabHandler = _G.ChatEdit_CustomTabPressed
-    _G.ChatEdit_CustomTabPressed = function(...)
-        local cfg = Cfg()
-        if active and cfg.tabSwitch ~= false then
-            return TabPressedInner(...)
-        end
-        if type(prevTabHandler) == "function" then
-            return prevTabHandler(...)
+    if not tabHandler then
+        tabHandler = function(...)
+            local cfg = Cfg()
+            local editbox = ResolveEditBox(...)
+            if active and cfg and cfg.tabSwitch ~= false then
+                if TabPressedInner(editbox) then
+                    return true
+                end
+            end
+            if type(prevTabHandler) == "function" and prevTabHandler ~= tabHandler then
+                return prevTabHandler(...)
+            end
         end
     end
-    tabInstalled = true
+    -- Some clients never call this global; editbox OnTabPressed hook is the reliable path.
+    if _G.ChatEdit_CustomTabPressed ~= tabHandler then
+        local current = _G.ChatEdit_CustomTabPressed
+        if type(current) == "function" and current ~= tabHandler then
+            prevTabHandler = current
+        end
+        _G.ChatEdit_CustomTabPressed = tabHandler
+    end
+    HookAllChatEditBoxes()
+    if not tabClaimFrame then
+        tabClaimFrame = CreateFrame("Frame")
+        tabClaimFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+        tabClaimFrame:SetScript("OnEvent", function()
+            if active then
+                InstallTabHandler()
+            end
+        end)
+    end
 end
 
 local function RegisterDiceSlash()
@@ -593,11 +684,11 @@ addon:RegisterFeature(KEY, {
         })
         C:AddEditBox(section, {
             label = L["World Channel Keywords"],
-            desc = L["Comma-separated names matched for Tab world-channel step. Default: 大脚世界频道, 世界频道."],
+            desc = L["Comma-separated names matched for Tab world-channel step. Default: 大脚世界频道, 世界频道, 寻求组队."],
             getFunc = function()
                 local list = Cfg().worldChannelKeywords
                 if type(list) ~= "table" or #list == 0 then
-                    return "大脚世界频道, 世界频道"
+                    return "大脚世界频道, 世界频道, 寻求组队"
                 end
                 return table.concat(list, ", ")
             end,
