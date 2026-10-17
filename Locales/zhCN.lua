@@ -49,7 +49,7 @@ L["Show or hide a sample overlay (clears when entering combat)."] = "显示或�
 
 L["Buff Keyword Block"] = "Buff 关键词屏蔽"
 L["Hide target/focus/party buffs whose names contain blocked keywords (private-server junk auras)."] = "隐藏目标/焦点/队伍上名称包含屏蔽关键词的 buff（私服垃圾光环）。"
-L["One keyword per line. On target, auras matching only「天命」are kept (ElvUI parity)."] = "用逗号分隔关键词。目标单位上仅命中「天命」的光环会保留（与 ElvUI 一致）。"
+L["One keyword per line. On target, auras matching only「天命」are kept."] = "用逗号分隔关键词。目标单位上仅命中「天命」的光环会保留。"
 L["Blocked Keywords"] = "屏蔽关键词"
 L["Press Enter to save. Separate keywords with commas. Leave empty to restore defaults."] = "按回车保存。用逗号分隔关键词；留空则恢复默认列表。"
 L["Press Enter to save. Leave empty to restore the default keyword list."] = "按回车保存。留空则恢复默认关键词列表。"
@@ -235,7 +235,7 @@ L["Info Friends"] = "好友"
 L["Info Guild"] = "公会"
 
 L["Death Recap"] = "死亡回顾"
-L["Replace the release-spirit popup so it is not auto-confirmed, and show the last hits that killed you."] = "替换释放灵魂弹窗，避免被自动确认，并显示致死的最近几次伤害。若 ElvUI 增强里也开了死亡回顾，请关掉那边，以免弹出两个窗口。"
+L["Replace the release-spirit popup so it is not auto-confirmed, and show the last hits that killed you."] = "替换释放灵魂弹窗，避免被自动确认，并显示致死的最近几次伤害。"
 L["You died."] = "你死了。"
 L["Death Recap unavailable."] = "没有可回顾的伤害。"
 L["Release Spirit"] = "释放灵魂"

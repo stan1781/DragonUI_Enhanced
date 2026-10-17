@@ -188,7 +188,7 @@ addon:RegisterFeature(KEY, {
     OnEnable = OnEnable,
     OnDisable = OnDisable,
     BuildOptions = function(section, C)
-        C:AddDescription(section, L["One keyword per line. On target, auras matching only「天命」are kept (ElvUI parity)."])
+        C:AddDescription(section, L["One keyword per line. On target, auras matching only「天命」are kept."])
         C:AddEditBox(section, {
             label = L["Blocked Keywords"],
             desc = L["Press Enter to save. Separate keywords with commas. Leave empty to restore defaults."],
